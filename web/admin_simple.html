@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Simple - Integra Mind</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #00f2ff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1e293b;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+        }
+
+        th {
+            background: #334155;
+            color: #00f2ff;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        .badge-pending {
+            background: rgba(148, 163, 184, 0.2);
+            color: #94a3b8;
+            border: 1px solid #94a3b8;
+        }
+
+        .badge-generated {
+            background: rgba(251, 191, 36, 0.2);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        .badge-sent {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #00f2ff;
+            color: #0f172a;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #00d9e6;
+        }
+
+        #status {
+            margin: 20px 0;
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 8px;
+            border-left: 4px solid #00f2ff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔐 Panel de Administración - Integra Mind</h1>
+
+        <div id="status">
+            <strong>Estado:</strong> <span id="statusText">Cargando...</span>
+        </div>
+
+        <button onclick="loadLeads()">🔄 Recargar Leads</button>
+        <button onclick="sendToAll()">📧 Enviar a Todos</button>
+
+        <table id="leadsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Empresa</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="leadsBody">
+                <tr>
+                    <td colspan="6" style="text-align: center;">Cargando...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api/admin';
+        const TOKEN = 'INTEGRA2026';
+
+        async function loadLeads() {
+            const statusText = document.getElementById('statusText');
+            const tbody = document.getElementById('leadsBody');
+
+            statusText.textContent = 'Cargando leads...';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Cargando...</td></tr>';
+
+            try {
+                const response = await fetch(`${API_URL}/leads`, {
+                    headers: {
+                        'X-Admin-Token': TOKEN
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const leads = await response.json();
+                statusText.textContent = `✅ ${leads.length} leads cargados correctamente`;
+
+                if (leads.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay leads registrados</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                leads.forEach(lead => {
+                    let statusBadge = '';
+                    let buttonText = '📄 Generar';
+
+                    if (lead.report_generated) {
+                        if (lead.report_sent_at) {
+                            statusBadge = '<span class="badge badge-sent">✅ Enviado</span>';
+                            buttonText = '🔄 Reenviar';
+                        } else {
+                            statusBadge = '<span class="badge badge-generated">📄 Generado</span>';
+                            buttonText = '📧 Enviar';
+                        }
+                    } else {
+                        statusBadge = '<span class="badge badge-pending">⏳ Pendiente</span>';
+                    }
+
+                    const row = `
+                        <tr>
+                            <td>${lead.id}</td>
+                            <td>${lead.name}</td>
+                            <td>${lead.email}</td>
+                            <td>${lead.company || 'N/A'}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <button onclick="generateReport(${lead.id}, '${lead.name}', '${lead.company || 'Empresa'}')">${buttonText}</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+            } catch (error) {
+                statusText.textContent = `❌ Error: ${error.message}`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444;">Error: ${error.message}</td></tr>`;
+                console.error('Error completo:', error);
+            }
+        }
+
+        async function generateReport(leadId, name, company) {
+            if (!confirm(`¿Generar y enviar reporte para ${name}?`)) return;
+
+            const statusText = document.getElementById('statusText');
+            statusText.textContent = `Generando reporte para ${name}...`;
+
+            try {
+                const response = await fetch(`${API_URL}/generate-report`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Token': TOKEN
+                    },
+                    body: JSON.stringify({
+                        client_name: name,
+                        industry: 'Energy & Utilities',
+                        lead_id: leadId,
+                        send_email: true
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusText.textContent = `✅ ${result.message}`;
+                    alert(`✅ Reporte generado!\n\n${result.email_status}`);
+                    loadLeads(); // Recargar tabla
+                } else {
+                    throw new Error(result.error || 'Error desconocido');
+                }
+
+            } catch (error) {
+                statusText.textContent = `❌ Error: ${error.message}`;
+                alert(`❌ Error: ${error.message}`);
+            }
+        }
+
+        async function sendToAll() {
+            if (!confirm('⚠️ ¿Enviar reportes a TODOS los leads pendientes?')) return;
+
+            const statusText = document.getElementById('statusText');
+            statusText.textContent = 'Enviando reportes masivos...';
+
+            try {
+                const response = await fetch(`${API_URL}/send-all-reports`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Token': TOKEN
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    statusText.textContent = `✅ Proceso completado: ${result.sent} enviados, ${result.errors} errores`;
+                    alert(`✅ Proceso completado!\n\n📧 Enviados: ${result.sent}\n❌ Errores: ${result.errors}\n📊 Total: ${result.total}`);
+                    loadLeads(); // Recargar tabla
+                } else {
+                    throw new Error(result.error || 'Error desconocido');
+                }
+
+            } catch (error) {
+                statusText.textContent = `❌ Error: ${error.message}`;
+                alert(`❌ Error: ${error.message}`);
+            }
+        }
+
+        // Cargar leads al inicio
+        loadLeads();
+    </script>
+</body>
+
+</html>

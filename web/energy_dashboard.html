@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Integra Mind Energy - Control Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Light Theme Defaults */
+            --bg-color: #f1f5f9;
+            --text-color: #1e293b;
+            --card-bg: #ffffff;
+            --card-border: #cbd5e1;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --header-bg: #ffffff;
+            --header-border: #e2e8f0;
+            --text-muted: #64748b;
+            --heading-color: #0f172a;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme Overrides */
+            --bg-color: #0f172a;
+            --text-color: #e2e8f0;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --card-shadow: rgba(0, 0, 0, 0.4);
+            --header-bg: #1e293b;
+            --header-border: #334155;
+            --text-muted: #94a3b8;
+            --heading-color: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--header-bg);
+            border-radius: 12px;
+            border: 1px solid var(--header-border);
+            box-shadow: 0 4px 6px -1px var(--card-shadow);
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-color);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--heading-color);
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            font-size: 0.95rem;
+            color: var(--heading-color);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--heading-color);
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-normal {
+            background: #10b981;
+            box-shadow: 0 0 12px #10b981;
+        }
+
+        .status-warning {
+            background: #f59e0b;
+            box-shadow: 0 0 12px #f59e0b;
+        }
+
+        .status-critical {
+            background: #ef4444;
+            box-shadow: 0 0 12px #ef4444;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .alert-item {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid #ef4444;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .alert-item.critical {
+            border-left-color: #ef4444;
+        }
+
+        .alert-item.high {
+            border-left-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .alert-description {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .transformer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .transformer-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .transformer-card.critical {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .health-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+            transition: width 0.3s ease;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        .forecast-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .forecast-time {
+            font-weight: 600;
+        }
+
+        .forecast-value {
+            color: #00d9ff;
+        }
+
+        /* 🚨 WAR ROOM MODE STYLES */
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(220, 20, 60, 1), 0 0 60px rgba(255, 0, 0, 0.8);
+            }
+        }
+
+        @keyframes flash-red {
+
+            0%,
+            100% {
+                background: rgba(220, 20, 60, 0.1);
+            }
+
+            50% {
+                background: rgba(220, 20, 60, 0.3);
+            }
+        }
+
+        body.war-room-active {
+            background: linear-gradient(135deg, #1a0000 0%, #3d0000 100%) !important;
+        }
+
+        body.war-room-active .header {
+            background: linear-gradient(135deg, #8b0000, #dc143c) !important;
+            border: 3px solid #ff0000 !important;
+            animation: flash-red 1.5s infinite;
+        }
+
+        body.war-room-active .card {
+            border-color: rgba(220, 20, 60, 0.5) !important;
+            background: rgba(139, 0, 0, 0.2) !important;
+        }
+
+        body.war-room-active h1,
+        body.war-room-active h2 {
+            color: #ff6b6b !important;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        .emergency-protocol {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #dc143c;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            z-index: 10002;
+            display: none;
+            box-shadow: 0 0 50px rgba(220, 20, 60, 0.8);
+        }
+
+        .emergency-protocol.active {
+            display: block;
+        }
+
+        .protocol-item {
+            background: rgba(220, 20, 60, 0.1);
+            border-left: 4px solid #dc143c;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar Tema">🌓</button>
+        <button id="war-room-btn" onclick="toggleWarRoom()"
+            style="position: absolute; top: 20px; right: 80px; background: linear-gradient(135deg, #dc143c, #8b0000); color: white; border: 2px solid #ff0000; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 0.9rem; box-shadow: 0 0 20px rgba(220, 20, 60, 0.5); animation: pulse-glow 2s infinite;"
+            title="Activar Modo Crisis">
+            🚨 WAR ROOM
+        </button>
+        <button id="voice-btn" onclick="toggleVoiceControl()"
+            style="position: absolute; top: 20px; right: 220px; background: linear-gradient(135deg, #3b82f6, #1e40af); color: white; border: 2px solid #60a5fa; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 0.9rem;"
+            title="Control por Voz">
+            🎤 VOZ
+        </button>
+        <a href="/digital_twin.html"
+            style="position: absolute; top: 20px; left: 80px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; border: 2px solid #a78bfa; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 0.9rem; text-decoration: none; display: inline-block;"
+            title="Ver Reactor en 3D">
+            🎮 3D TWIN
+        </a>
+        <h1>🌐 INTEGRA MIND: GLOBAL OPS</h1>
+        <p class="subtitle">INFRAESTRUCTURA • FINANZAS • PERSONAS</p>
+        <p class="subtitle" id="current-time"></p>
+
+        <script>
+            // Theme Logic
+            function toggleTheme() {
+                const body = document.documentElement;
+                const currentTheme = body.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                body.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateChartsTheme(newTheme); // Optional: Update charts if needed
+            }
+
+            // Init Theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            function updateChartsTheme(theme) {
+                // Future: Update chart.js colors dynamically
+            }
+        </script>
+
+        <!-- BOTÓN GOD MODE FLOTANTE -->
+        <button onclick="toggleGodPanel()"
+            style="position:fixed; top:50%; right:0; transform:translateY(-50%); background:#dc143c; color:white; border:none; padding:15px 10px; border-radius:10px 0 0 10px; cursor:pointer; z-index:10001; font-weight:bold; box-shadow:-4px 0 15px rgba(220,20,60,0.4);">
+            ☠️<br>S<br>I<br>M
+        </button>
+
+        <!-- GOD MODE SIDEBAR -->
+        <div id="god-mode-panel"
+            style="position:fixed; top:0; right:-320px; height:100vh; width:300px; background:var(--card-bg); border-left:3px solid #dc143c; padding:25px; z-index:10000; box-shadow:-10px 0 30px rgba(0,0,0,0.2); transition:right 0.3s ease; overflow-y:auto;">
+
+            <h3
+                style="color:#ef4444; margin:0 0 20px 0; text-align:center; font-size:1.2rem; border-bottom:2px solid #ef4444; padding-bottom:10px;">
+                ☠️ CHAOS ENGINE
+            </h3>
+
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px; font-weight:600;">INFRAESTRUCTURA
+                FÍSICA</div>
+
+            <button onclick="triggerCrisis('overheat_reactor')" class="crisis-btn"
+                style="background:linear-gradient(90deg, #dc143c, #991b1b);">
+                🔥 Reactor Meltdown
+            </button>
+            <button onclick="triggerCrisis('grid_blackout')" class="crisis-btn"
+                style="background:linear-gradient(90deg, #1f2937, #000000);">
+                ⚡ Blackout Total
+            </button>
+
+            <div style="font-size:0.8rem; color:var(--text-muted); margin:15px 0 10px 0; font-weight:600;">SOCIEDAD &
+                BIOLOGÍA</div>
+
+            <button onclick="triggerCrisis('bio_leak')" class="crisis-btn"
+                style="background:linear-gradient(90deg, #16a34a, #15803d);">
+                ☣️ Fuga Bioquímica
+            </button>
+            <button onclick="triggerCrisis('reputation_scandal')" class="crisis-btn"
+                style="background:linear-gradient(90deg, #9333ea, #7e22ce);">
+                📢 Escándalo Viral (Ética)
+            </button>
+
+            <div style="font-size:0.8rem; color:var(--text-muted); margin:15px 0 10px 0; font-weight:600;">ECONOMÍA &
+                MERCADO</div>
+
+            <button onclick="triggerCrisis('market_crash')" class="crisis-btn"
+                style="background:linear-gradient(90deg, #ca8a04, #a16207);">
+                📉 Colapso Financiero
+            </button>
+
+            <hr style="border:0; border-top:1px solid var(--card-border); margin:20px 0;">
+
+            <button onclick="resolveAllCrises()"
+                style="width:100%; background:linear-gradient(135deg, #10b981, #059669); color:white; border:none; padding:15px; border-radius:8px; cursor:pointer; font-weight:800; font-size:1rem; box-shadow:0 4px 15px rgba(16, 185, 129, 0.3);">
+                ✅ AI AUTO-RESOLVE
+            </button>
+
+            <button onclick="toggleGodPanel()"
+                style="width:100%; margin-top:10px; background:transparent; color:var(--text-muted); border:1px solid var(--card-border); padding:10px; border-radius:8px; cursor:pointer;">
+                Cerrar Panel
+            </button>
+        </div>
+
+        <style>
+            .crisis-btn {
+                width: 100%;
+                margin-bottom: 8px;
+                color: white;
+                border: none;
+                padding: 12px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 600;
+                text-align: left;
+                transition: transform 0.1s;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .crisis-btn:active {
+                transform: scale(0.98);
+            }
+
+            .crisis-btn:hover {
+                opacity: 0.9;
+            }
+        </style>
+
+
+        <div id="god-mode-overlay"
+            style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(220, 20, 60, 0.2); pointer-events:none; z-index:9999; border: 5px solid red; animation: flash 1s infinite;">
+        </div>
+    </div>
+
+    <div class="grid">
+        <!-- Demanda Actual -->
+        <div class="card">
+            <h2>⚡ Demanda Actual</h2>
+            <div class="metric-value" id="current-demand">-- MW</div>
+            <div class="metric-label">
+                <span class="status-indicator status-normal" id="status-indicator"></span>
+                <span id="status-text">Cargando...</span>
+            </div>
+        </div>
+
+        <!-- Capacidad -->
+        <div class="card">
+            <h2>📊 Utilización</h2>
+            <div class="metric-value" id="utilization">--%</div>
+            <div class="metric-label">Capacidad: <span id="capacity">--</span> MW</div>
+        </div>
+
+        <!-- Renovables -->
+        <div class="card">
+            <h2>🌱 Energía Renovable</h2>
+            <div class="metric-value" id="renewable">--%</div>
+            <div class="metric-label">Generación limpia</div>
+        </div>
+
+        <!-- Frecuencia -->
+        <div class="card">
+            <h2>⚙️ Frecuencia</h2>
+            <div class="metric-value" id="frequency">-- Hz</div>
+            <div class="metric-label">Sistema estable</div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Demanda -->
+    <div class="card">
+        <h2>📈 Demanda Últimas 24 Horas</h2>
+        <div class="chart-container">
+            <canvas id="demandChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Monitor Financiero y Eficiencia -->
+    <div class="grid" style="grid-template-columns: 2fr 1fr;">
+        <div class="card">
+            <h2>💰 PULSO FINANCIERO OPERATIVO</h2>
+            <div style="display: flex; gap: 20px; align-items: center; justify-content: space-around;">
+                <div style="text-align:center;">
+                    <div style="font-size: 0.9em; color: #94a3b8;">COSTO OPERATIVO / HORA (SIN IA)</div>
+                    <div style="font-size: 1.8em; color: #ef4444; font-weight:bold;">$42,850</div>
+                </div>
+                <div style="font-size: 2em;">👉</div>
+                <div style="text-align:center;">
+                    <div style="font-size: 0.9em; color: #94a3b8;">COSTO OPTIMIZADO (CON INTEGRA)</div>
+                    <div style="font-size: 2.2em; color: #10b981; font-weight:bold;">$34,120</div>
+                </div>
+                <div
+                    style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 12px; border: 1px solid #10b981; text-align: center;">
+                    <div style="color: #10b981; font-weight:bold;">AHORRO ACUMULADO HOY</div>
+                    <div style="font-size: 1.5em; color: white;">$209,520</div>
+                </div>
+            </div>
+            <!-- Barra de Progreso Simulada -->
+            <div style="margin-top: 20px;">
+                <div
+                    style="display:flex; justify-content:space-between; font-size:0.8em; color:#94a3b8; margin-bottom:5px;">
+                    <span>Eficiencia de Recursos</span>
+                    <span>94.8% (Objetivo: 95%)</span>
+                </div>
+                <div style="width:100%; height:8px; background:#334155; border-radius:4px; overflow:hidden;">
+                    <div style="width:94.8%; height:100%; background:linear-gradient(90deg, #00d9ff, #10b981);"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Humano -->
+        <div class="card">
+            <h2>👥 GESTIÓN DE PERSONAL</h2>
+            <div class="forecast-item">
+                <span class="forecast-time">Ingenieros en Campo</span>
+                <span class="forecast-value" style="color:#e2e8f0;">14 Activos</span>
+            </div>
+            <div class="forecast-item">
+                <span class="forecast-time">Seguridad Física</span>
+                <span class="forecast-value" style="color:#10b981;">✅ OK (Zona A/B)</span>
+            </div>
+            <div class="forecast-item">
+                <span class="forecast-time">Incidentes RRHH</span>
+                <span class="forecast-value" style="color:#e2e8f0;">0 Pendientes</span>
+            </div>
+            <div style="margin-top:15px; text-align:center;">
+                <button
+                    style="background:rgba(59, 130, 246, 0.15); border:1px solid #3b82f6; color:#3b82f6; padding:8px 16px; border-radius:6px; cursor:pointer;"
+                    onclick="alert('Funcionalidad Demo: Contactando al Jefe de Planta...')">📞 Contactar Jefe de
+                    Planta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🤖 MANTENIMIENTO PREDICTIVO (ML) -->
+    <div class="card"
+        style="border: 2px solid #8b5cf6; background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(168, 85, 247, 0.05));">
+        <h2 style="display: flex; align-items: center; gap: 10px;">
+            🤖 MOTOR PREDICTIVO - INTELIGENCIA ARTIFICIAL
+            <span id="ml-status"
+                style="font-size: 0.7em; padding: 4px 12px; border-radius: 12px; background: #64748b; color: white;">●
+                ANALIZANDO...</span>
+        </h2>
+
+        <div class="grid" style="margin-top: 20px;">
+            <!-- Risk Level -->
+            <div id="risk-card"
+                style="background: rgba(16, 185, 129, 0.1); border: 2px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                <div style="font-size: 0.85em; color: #94a3b8; margin-bottom: 10px;">🎯 NIVEL DE RIESGO</div>
+                <div id="risk-level" style="font-size: 2.5em; font-weight: 800; color: #10b981;">LOW</div>
+                <div id="risk-confidence" style="font-size: 1em; color: #94a3b8; margin-top: 5px;">-- % confianza</div>
+            </div>
+
+            <!-- Time to Failure -->
+            <div
+                style="background: rgba(245, 158, 11, 0.1); border: 2px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                <div style="font-size: 0.85em; color: #94a3b8; margin-bottom: 10px;">⏱️ TIEMPO HASTA FALLA</div>
+                <div id="time-to-failure" style="font-size: 2.5em; font-weight: 800; color: #f59e0b;">∞</div>
+                <div style="font-size: 1em; color: #94a3b8;">horas</div>
+            </div>
+
+            <!-- Recommendation -->
+            <div
+                style="background: rgba(59, 130, 246, 0.1); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                <div style="font-size: 0.85em; color: #94a3b8; margin-bottom: 10px;">💡 RECOMENDACIÓN IA</div>
+                <div id="ml-recommendation"
+                    style="font-size: 1.1em; font-weight: 600; color: #3b82f6; line-height: 1.4;">Cargando...</div>
+            </div>
+        </div>
+
+        <div
+            style="margin-top: 15px; padding: 12px; background: rgba(139, 92, 246, 0.1); border-radius: 8px; font-size: 0.8em; color: #94a3b8; text-align: center;">
+            🧠 Modelo: <strong style="color: #8b5cf6;">Isolation Forest ML</strong> |
+            📊 Entrenado con: <strong>720 horas</strong> de datos |
+            🕐 Última predicción: <span id="ml-last-update">--</span>
+        </div>
+    </div>
+
+    <!-- 🏭 MONITOR PLC EN TIEMPO REAL (SCADA) -->
+    <div class="card"
+        style="border: 2px solid #00d9ff; background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(0, 255, 136, 0.05));">
+        <h2 style="display: flex; align-items: center; gap: 10px;">
+            🏭 PLC MONITOR - DATOS INDUSTRIALES EN VIVO
+            <span id="plc-connection-status"
+                style="font-size: 0.7em; padding: 4px 12px; border-radius: 12px; background: #ef4444; color: white;">●
+                CONECTANDO...</span>
+        </h2>
+
+        <div class="grid" style="margin-top: 20px;">
+            <!-- Temperatura Reactor -->
+            <div
+                style="background: rgba(239, 68, 68, 0.1); border: 2px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                <div style="font-size: 0.85em; color: #94a3b8; margin-bottom: 10px;">🌡️ TEMPERATURA REACTOR</div>
+                <div id="plc-temperatura" style="font-size: 2.5em; font-weight: 800; color: #ef4444;">--</div>
+                <div style="font-size: 1em; color: #94a3b8;">°C</div>
+                <div id="plc-temp-status" style="margin-top: 10px; font-size: 0.75em; color: #10b981;">✅ Normal</div>
+            </div>
+
+            <!-- Presión Válvula -->
+            <div
+                style="background: rgba(59, 130, 246, 0.1); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                <div style="font-size: 0.85em; color: #94a3b8; margin-bottom: 10px;">💨 PRESIÓN VÁLVULA</div>
+                <div id="plc-presion" style="font-size: 2.5em; font-weight: 800; color: #3b82f6;">--</div>
+                <div style="font-size: 1em; color: #94a3b8;">PSI</div>
+                <div id="plc-presion-status" style="margin-top: 10px; font-size: 0.75em; color: #10b981;">✅ Normal</div>
+            </div>
+
+            <!-- Estado Turbina -->
+            <div
+                style="background: rgba(16, 185, 129, 0.1); border: 2px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 20px; text-align: center;">
+                <div style="font-size: 0.85em; color: #94a3b8; margin-bottom: 10px;">⚙️ TURBINA PRINCIPAL</div>
+                <div id="plc-turbina" style="font-size: 2em; font-weight: 800; color: #10b981;">--</div>
+                <div id="plc-turbina-rpm" style="font-size: 1.2em; color: #94a3b8; margin-top: 5px;">-- RPM</div>
+            </div>
+        </div>
+
+        <div
+            style="margin-top: 15px; padding: 12px; background: rgba(100, 116, 139, 0.1); border-radius: 8px; font-size: 0.8em; color: #94a3b8; text-align: center;">
+            📡 Protocolo: <strong style="color: #00d9ff;">Modbus TCP/IP</strong> |
+            🔌 Puerto: <strong>5020</strong> |
+            🕐 Última actualización: <span id="plc-last-update">--</span>
+        </div>
+    </div>
+
+    <!-- MONITOR DE CONCIENCIA SINTÉTICA -->
+    <div class="grid" style="grid-template-columns: 1fr 2fr;">
+        <!-- Radar de Ética -->
+        <div class="card">
+            <h2>🧠 SYNTHETIC CONSCIENCE</h2>
+            <div style="height: 250px;">
+                <canvas id="conscienceRadar"></canvas>
+            </div>
+            <div style="text-align: center; margin-top: 10px; font-size: 0.8em; color: #94a3b8;">
+                <div>⚖️ EQUILIBRIO DE DECISIÓN ACTIVO</div>
+                <div style="color: #10b981; font-weight: bold;">OPTIMIZACIÓN ÉTICA: 99.4%</div>
+            </div>
+        </div>
+
+        <!-- Alertas -->
+        <div class="card">
+            <h2>🚨 Alertas de Sistema Global</h2>
+            <div id="alerts-container">
+                <div class="loading">Escaneando anomalías biológicas y físicas...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transformadores -->
+    <div class="card">
+        <h2>🔧 Estado de Transformadores</h2>
+        <div class="transformer-grid" id="transformers-container">
+            <div class="loading">Cargando...</div>
+        </div>
+    </div>
+    </div>
+
+    <!-- 🚨 EMERGENCY PROTOCOL PANEL -->
+    <div class="emergency-protocol" id="emergency-protocol">
+        <h2 style="color: #dc143c; text-align: center; font-size: 1.8rem; margin-bottom: 20px;">
+            🚨 PROTOCOLO DE EMERGENCIA ACTIVADO
+        </h2>
+        <div style="color: #ff6b6b; text-align: center; margin-bottom: 25px; font-size: 1.1rem;">
+            Sigue estos pasos en orden:
+        </div>
+
+        <div class="protocol-item">
+            <input type="checkbox" id="step1" style="margin-right: 10px; transform: scale(1.3);">
+            <label for="step1" style="color: #e2e8f0; cursor: pointer;">
+                <strong>1.</strong> Verificar estado del PLC (temperatura, presión)
+            </label>
+        </div>
+
+        <div class="protocol-item">
+            <input type="checkbox" id="step2" style="margin-right: 10px; transform: scale(1.3);">
+            <label for="step2" style="color: #e2e8f0; cursor: pointer;">
+                <strong>2.</strong> Contactar al Jefe de Planta inmediatamente
+            </label>
+        </div>
+
+        <div class="protocol-item">
+            <input type="checkbox" id="step3" style="margin-right: 10px; transform: scale(1.3);">
+            <label for="step3" style="color: #e2e8f0; cursor: pointer;">
+                <strong>3.</strong> Activar sistema de enfriamiento de emergencia
+            </label>
+        </div>
+
+        <div class="protocol-item">
+            <input type="checkbox" id="step4" style="margin-right: 10px; transform: scale(1.3);">
+            <label for="step4" style="color: #e2e8f0; cursor: pointer;">
+                <strong>4.</strong> Notificar a autoridades regulatorias (si aplica)
+            </label>
+        </div>
+
+        <button onclick="toggleWarRoom()"
+            style="width: 100%; margin-top: 20px; background: #10b981; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 1.1rem;">
+            ✅ CRISIS RESUELTA - SALIR
+        </button>
+    </div>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chat-widget">
+        <div class="chat-header">
+            <div class="chat-title">
+                <span>🧠</span> INTEGRA MIND AI
+            </div>
+            <button class="chat-close" onclick="toggleChat()">×</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot-message">
+                ¡Hola! Soy el cerebro de Integra Mind Energy. ⚡<br>
+                Puedo analizar la demanda, detectar fraudes o revisar transformadores.<br>
+                ¿En qué puedo ayudarte hoy?
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Pregunta algo sobre el sistema..."
+                onkeypress="handleChatKey(event)">
+            <button class="chat-send" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <!-- Chat Toggle Button -->
+    <button class="chat-toggle" onclick="toggleChat()">
+        🧠
+    </button>
+
+    <style>
+        /* Chat Widget Styles */
+        .chat-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d9ff 0%, #7c3aed 100%);
+            border: none;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 217, 255, 0.8);
+        }
+
+        .chat-widget {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 380px;
+            height: 500px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .chat-widget.active {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: linear-gradient(90deg, rgba(0, 217, 255, 0.1), rgba(124, 58, 237, 0.1));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-weight: 700;
+            color: #00d9ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            color: #e2e8f0;
+            border-bottom-left-radius: 2px;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #00d9ff 0%, #2563eb 100%);
+            color: white;
+            border-bottom-right-radius: 2px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .chat-input-area {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        #chat-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: white;
+            outline: none;
+        }
+
+        #chat-input:focus {
+            border-color: #00d9ff;
+        }
+
+        .chat-send {
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            color: #00d9ff;
+            width: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-send:hover {
+            background: #00d9ff;
+            color: white;
+        }
+
+        /* Markdown Styles inside Chat */
+        .message strong {
+            color: #00d9ff;
+        }
+
+        .message ul {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+
+        /* Scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+
+    <script>
+        const API_URL = '/api/energy';
+        let demandChart = null;
+
+        // Actualizar hora
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent =
+                now.toLocaleString('es-AR', {
+                    dateStyle: 'full',
+                    timeStyle: 'medium'
+                });
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // === RAIDAR DE CONCIENCIA SINTÉTICA ===
+        function initConscienceRadar() {
+            const ctx = document.getElementById('conscienceRadar').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['PROFIT (Economía)', 'BIOS (Biología)', 'ETHICS (Derechos)', 'POLITIC (Leyes)', 'RISK (Seguridad)'],
+                    datasets: [{
+                        label: 'Balance de Decisión IA',
+                        data: [95, 88, 100, 100, 92], // Valores iniciales
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        borderColor: '#10b981',
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#10b981',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(148, 163, 184, 0.2)' },
+                            grid: { color: 'rgba(148, 163, 184, 0.2)' },
+                            pointLabels: { color: '#94a3b8', font: { size: 10 } },
+                            ticks: { display: false, backdropColor: 'transparent' },
+                            suggestedMin: 50,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: { legend: { display: false } },
+                    animation: { duration: 2000, easing: 'easeInOutQuad' }
+                }
+            });
+        }
+        // Llamar inicialización
+        document.addEventListener('DOMContentLoaded', initConscienceRadar);
+        updateTime();
+
+        // Cargar estado actual
+        async function loadCurrentStatus() {
+            try {
+                const response = await fetch(`${API_URL}/current-status`);
+                const data = await response.json();
+
+                document.getElementById('current-demand').textContent =
+                    `${data.current_demand_mw.toFixed(0)} MW`;
+                document.getElementById('utilization').textContent =
+                    `${data.utilization_percent.toFixed(1)}%`;
+                document.getElementById('capacity').textContent =
+                    data.capacity_mw;
+                document.getElementById('renewable').textContent =
+                    `${data.renewable_percent.toFixed(1)}%`;
+                document.getElementById('frequency').textContent =
+                    `${data.frequency_hz.toFixed(2)} Hz`;
+
+                // Estado
+                const indicator = document.getElementById('status-indicator');
+                const statusText = document.getElementById('status-text');
+
+                if (data.utilization_percent < 75) {
+                    indicator.className = 'status-indicator status-normal';
+                    statusText.textContent = 'Sistema Normal';
+                } else if (data.utilization_percent < 90) {
+                    indicator.className = 'status-indicator status-warning';
+                    statusText.textContent = 'Demanda Alta';
+                } else {
+                    indicator.className = 'status-indicator status-critical';
+                    statusText.textContent = 'Demanda Crítica';
+                }
+            } catch (error) {
+                console.error('Error cargando estado:', error);
+            }
+        }
+
+        // Cargar histórico y crear gráfico
+        async function loadDemandHistory() {
+            try {
+                const response = await fetch(`${API_URL}/demand-history?hours=24`);
+                const data = await response.json();
+
+                const labels = data.map(d => {
+                    const date = new Date(d.timestamp);
+                    return date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+                });
+                const demands = data.map(d => d.demand_mw);
+                const renewables = data.map(d => d.renewable_mw);
+
+                const ctx = document.getElementById('demandChart').getContext('2d');
+
+                if (demandChart) {
+                    demandChart.destroy();
+                }
+
+                demandChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Demanda Total',
+                            data: demands,
+                            borderColor: '#00d9ff',
+                            backgroundColor: 'rgba(0, 217, 255, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: 'Generación Renovable',
+                            data: renewables,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#e2e8f0' }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            },
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error cargando histórico:', error);
+            }
+        }
+
+        // Cargar predicciones
+        async function loadForecast() {
+            try {
+                const response = await fetch(`${API_URL}/forecast?hours=6`);
+                const data = await response.json();
+
+                const container = document.getElementById('forecast-list');
+                container.innerHTML = data.map(f => {
+                    const time = new Date(f.timestamp).toLocaleTimeString('es-AR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    return `
+                        <div class="forecast-item">
+                            <span class="forecast-time">${time}</span>
+                            <span class="forecast-value">${f.predicted_mw.toFixed(0)} MW</span>
+                            <span class="metric-label">(${f.confidence}% confianza)</span>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error cargando predicciones:', error);
+            }
+        }
+
+        // Cargar alertas
+        // Cargar Alertas Multidimensionales Simuladas
+        function loadMultidimensionalAlerts() {
+            const container = document.getElementById('alerts-container');
+
+            const events = [
+                { type: 'ETHICS', icon: '⚖️', title: 'Decisión Bloqueada', desc: 'Reducción de personal en Planta B detenida por Riesgo Impacto Social > 40%.', color: '#8b5cf6' },
+                { type: 'BIOS', icon: '🧬', title: 'Alerta Ambiental', desc: 'Emisiones en Zona 4 al 85% del límite. Potencia reducida preventivamente.', color: '#10b981' },
+                { type: 'POLITIC', icon: '🏛️', title: 'Compliance Update', desc: 'Nueva regulación laboral (Ley 24.5) integrada al motor de turnos.', color: '#f59e0b' },
+                { type: 'PROFIT', icon: '💸', title: 'Oportunidad Spot', desc: 'Compra de 50MW baratos detectada. Ahorro proyectado: $15,400.', color: '#0ea5e9' },
+                { type: 'RISK', icon: '🛡️', title: 'Ciberseguridad', desc: 'Intento de acceso no autorizado en Válvula 4 bloqueado por IA.', color: '#ef4444' }
+            ];
+
+            let html = '';
+            events.forEach(e => {
+                html += `
+                <div style="display:flex; align-items:start; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+                    <div style="background:${e.color}20; padding:8px; border-radius:8px; margin-right:12px; font-size:1.2em;">${e.icon}</div>
+                    <div>
+                        <div style="font-weight:700; color:#334155; font-size:0.9em;">
+                            <span style="color:${e.color}; margin-right:5px;">[${e.type}]</span> ${e.title}
+                        </div>
+                        <div style="font-size:0.85em; color:#64748b; line-height:1.4;">${e.desc}</div>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Cargar transformadores
+        async function loadTransformers() {
+            try {
+                const response = await fetch(`${API_URL}/transformers`);
+                const data = await response.json();
+
+                const container = document.getElementById('transformers-container');
+                container.innerHTML = data.map(t => `
+                    <div class="transformer-card ${t.is_critical ? 'critical' : ''}">
+                        <div style="font-weight: 600;">${t.code}</div>
+                        <div class="metric-label">${t.substation}</div>
+                        <div style="margin-top: 10px;">
+                            <span style="color: ${t.health_score < 50 ? '#ef4444' : t.health_score < 75 ? '#f59e0b' : '#10b981'}">
+                                ${t.health_score}% salud
+                            </span>
+                        </div>
+                        <div class="health-bar">
+                            <div class="health-fill" style="width: ${t.health_score}%"></div>
+                        </div>
+                        <div class="metric-label" style="margin-top: 5px;">
+                            ${t.temperature}°C | ${t.load_percent}% carga
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error cargando transformadores:', error);
+            }
+        }
+
+        // 🏭 NUEVO: Cargar datos del PLC en tiempo real
+        async function loadPLCData() {
+            try {
+                const response = await fetch('/api/plc/live-data');
+                const data = await response.json();
+
+                if (data.connected && data.status === 'ok') {
+                    // Actualizar badge de conexión
+                    const statusBadge = document.getElementById('plc-connection-status');
+                    statusBadge.textContent = '● CONECTADO';
+                    statusBadge.style.background = '#10b981';
+
+                    // Actualizar Temperatura
+                    const temp = data.plc_data.temperatura_reactor;
+                    document.getElementById('plc-temperatura').textContent = temp;
+                    const tempStatus = document.getElementById('plc-temp-status');
+                    if (temp > 800) {
+                        tempStatus.textContent = '🔥 CRÍTICO';
+                        tempStatus.style.color = '#ef4444';
+                    } else if (temp > 400) {
+                        tempStatus.textContent = '⚠️ Elevada';
+                        tempStatus.style.color = '#f59e0b';
+                    } else {
+                        tempStatus.textContent = '✅ Normal';
+                        tempStatus.style.color = '#10b981';
+                    }
+
+                    // Actualizar Presión
+                    const presion = data.plc_data.presion_valvula;
+                    document.getElementById('plc-presion').textContent = presion;
+                    const presionStatus = document.getElementById('plc-presion-status');
+                    if (presion > 800) {
+                        presionStatus.textContent = '💥 PELIGRO';
+                        presionStatus.style.color = '#ef4444';
+                    } else if (presion > 600) {
+                        presionStatus.textContent = '⚠️ Alta';
+                        presionStatus.style.color = '#f59e0b';
+                    } else {
+                        presionStatus.textContent = '✅ Normal';
+                        presionStatus.style.color = '#10b981';
+                    }
+
+                    // Actualizar Turbina
+                    document.getElementById('plc-turbina').textContent = data.plc_data.turbina_estado;
+                    document.getElementById('plc-turbina-rpm').textContent = `${data.plc_data.turbina_rpm} RPM`;
+
+                    // Actualizar timestamp
+                    const time = new Date(data.timestamp).toLocaleTimeString('es-AR');
+                    document.getElementById('plc-last-update').textContent = time;
+
+                } else {
+                    // PLC desconectado
+                    const statusBadge = document.getElementById('plc-connection-status');
+                    statusBadge.textContent = '● DESCONECTADO';
+                    statusBadge.style.background = '#ef4444';
+                }
+
+            } catch (error) {
+                console.error('Error cargando datos del PLC:', error);
+                const statusBadge = document.getElementById('plc-connection-status');
+                statusBadge.textContent = '● ERROR';
+                statusBadge.style.background = '#ef4444';
+            }
+        }
+
+        // Cargar todo
+        async function loadAll() {
+            await Promise.all([
+                loadCurrentStatus(),
+                loadDemandHistory(),
+                loadForecast(),
+                loadMultidimensionalAlerts(),
+                loadTransformers()
+            ]);
+        }
+
+        // Cargar al inicio y cada 30 segundos
+        loadAll();
+        setInterval(loadAll, 30000);
+
+        // 🏭 PLC: Actualizar cada 2 segundos (más rápido que el resto)
+        loadPLCData();
+        setInterval(loadPLCData, 2000);
+
+        // 🤖 ML Predictivo: Actualizar cada 5 segundos
+        loadPredictiveData();
+        setInterval(loadPredictiveData, 5000);
+
+        // 🚨 WAR ROOM MODE
+        function toggleWarRoom() {
+            document.body.classList.toggle('war-room-active');
+            document.getElementById('emergency-protocol').classList.toggle('active');
+
+            const btn = document.getElementById('war-room-btn');
+            if (document.body.classList.contains('war-room-active')) {
+                btn.textContent = '✅ SALIR WAR ROOM';
+                btn.style.background = '#10b981';
+            } else {
+                btn.textContent = '🚨 WAR ROOM';
+                btn.style.background = 'linear-gradient(135deg, #dc143c, #8b0000)';
+            }
+        }
+
+        // 🎤 VOICE CONTROL
+        let recognition = null;
+        let isListening = false;
+
+        function toggleVoiceControl() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('❌ Tu navegador no soporta reconocimiento de voz. Usa Chrome/Edge.');
+                return;
+            }
+            if (!isListening) { startVoiceControl(); } else { stopVoiceControl(); }
+        }
+
+        function startVoiceControl() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.continuous = true;
+
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('voice-btn').textContent = '🔴 ESCUCHANDO...';
+                document.getElementById('voice-btn').style.background = '#ef4444';
+                speak('Asistente activado');
+            };
+
+            recognition.onresult = (event) => {
+                const cmd = event.results[event.results.length - 1][0].transcript.toLowerCase();
+                console.log('🎤 Escuché:', cmd);  // Para debug
+
+                let resp = '';
+
+                // Temperatura
+                if (cmd.includes('temperatura') || cmd.includes('calor') || cmd.includes('grados') || cmd.includes('reactor')) {
+                    const temp = document.getElementById('plc-temperatura').textContent;
+                    resp = `La temperatura del reactor es ${temp} grados celsius`;
+                }
+                // Presión
+                else if (cmd.includes('presión') || cmd.includes('presion') || cmd.includes('válvula') || cmd.includes('valvula') || cmd.includes('psi')) {
+                    const presion = document.getElementById('plc-presion').textContent;
+                    resp = `La presión es ${presion} PSI`;
+                }
+                // Turbina
+                else if (cmd.includes('turbina') || cmd.includes('motor') || cmd.includes('generador')) {
+                    const turbina = document.getElementById('plc-turbina').textContent;
+                    resp = `La turbina está ${turbina}`;
+                }
+                // Estado general
+                else if (cmd.includes('estado') || cmd.includes('todo') || cmd.includes('sistema') || cmd.includes('cómo') || cmd.includes('como')) {
+                    resp = 'Todos los sistemas operando normalmente. Temperatura, presión y turbina en rangos seguros';
+                }
+                // Ayuda
+                else if (cmd.includes('ayuda') || cmd.includes('qué puedes') || cmd.includes('que puedes') || cmd.includes('comandos')) {
+                    resp = 'Puedes preguntar por temperatura, presión, turbina o estado general del sistema';
+                }
+                // No entendió
+                else {
+                    resp = `No entendí "${cmd}". Intenta: temperatura, presión, turbina o estado`;
+                }
+
+                speak(resp);
+            };
+
+            recognition.start();
+        }
+
+        function stopVoiceControl() {
+            if (recognition) recognition.stop();
+            isListening = false;
+            document.getElementById('voice-btn').textContent = '🎤 VOZ';
+            document.getElementById('voice-btn').style.background = 'linear-gradient(135deg, #3b82f6, #1e40af)';
+        }
+
+        function speak(text) {
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'es-ES';
+            window.speechSynthesis.speak(u);
+        }
+
+        // 🤖 PREDICTIVE MAINTENANCE
+        async function loadPredictiveData() {
+            try {
+                const response = await fetch('/api/predictive/analyze');
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    const pred = data.prediction;
+                    const rec = data.recommendation;
+
+                    // Update status badge
+                    document.getElementById('ml-status').textContent = '● ACTIVO';
+                    document.getElementById('ml-status').style.background = '#10b981';
+
+                    // Update risk level
+                    const riskCard = document.getElementById('risk-card');
+                    const riskLevel = document.getElementById('risk-level');
+                    riskLevel.textContent = pred.risk_level;
+                    document.getElementById('risk-confidence').textContent = `${pred.confidence}% confianza`;
+
+                    // Color coding
+                    if (pred.risk_level === 'CRITICAL') {
+                        riskCard.style.background = 'rgba(239, 68, 68, 0.2)';
+                        riskCard.style.borderColor = '#ef4444';
+                        riskLevel.style.color = '#ef4444';
+                    } else if (pred.risk_level === 'HIGH') {
+                        riskCard.style.background = 'rgba(245, 158, 11, 0.2)';
+                        riskCard.style.borderColor = '#f59e0b';
+                        riskLevel.style.color = '#f59e0b';
+                    } else {
+                        riskCard.style.background = 'rgba(16, 185, 129, 0.1)';
+                        riskCard.style.borderColor = '#10b981';
+                        riskLevel.style.color = '#10b981';
+                    }
+
+                    // Update time to failure
+                    const ttf = pred.time_to_failure_hours;
+                    document.getElementById('time-to-failure').textContent = ttf ? ttf : '∞';
+
+                    // Update recommendation
+                    document.getElementById('ml-recommendation').textContent = rec.message;
+
+                    // Update timestamp
+                    document.getElementById('ml-last-update').textContent = new Date().toLocaleTimeString('es-AR');
+                }
+            } catch (error) {
+                console.error('Error loading predictive data:', error);
+                document.getElementById('ml-status').textContent = '● ERROR';
+                document.getElementById('ml-status').style.background = '#ef4444';
+            }
+        }
+
+        // Chat Logic
+        function toggleChat() {
+            const widget = document.getElementById('chat-widget');
+            widget.classList.toggle('active');
+
+            // Focus input when opening
+            if (widget.classList.contains('active')) {
+                setTimeout(() => document.getElementById('chat-input').focus(), 300);
+            }
+        }
+
+        function openChat() {
+            const widget = document.getElementById('chat-widget');
+            if (!widget.classList.contains('active')) {
+                widget.classList.add('active');
+                setTimeout(() => document.getElementById('chat-input').focus(), 300);
+            }
+        }
+
+        function handleChatKey(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Show loading placeholder
+            const loadingId = addMessage('Thinking...', 'bot', true);
+
+            try {
+                // Call API (using our new endpoint)
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+
+                // Remove loading message
+                removeMessage(loadingId);
+
+                if (data.error) {
+                    addMessage(`Error: ${data.error}`, 'bot');
+                } else {
+                    addMessage(formatResponse(data.response), 'bot');
+                }
+            } catch (error) {
+                removeMessage(loadingId);
+                addMessage('Lo siento, no pude conectar con mi cerebro. 🧠💤', 'bot');
+                console.error("Chat Error:", error);
+            }
+        }
+
+        function addMessage(text, sender, isLoading = false) {
+            const container = document.getElementById('chat-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}-message`;
+
+            if (isLoading) {
+                msgDiv.id = `msg-${Date.now()}`;
+                msgDiv.style.opacity = '0.7';
+                msgDiv.innerHTML = '<i>Analizando sistema... ⚡</i>';
+            } else {
+                msgDiv.innerHTML = text;
+            }
+
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+
+            return msgDiv.id;
+        }
+
+        function removeMessage(id) {
+            if (id) {
+                const el = document.getElementById(id);
+                if (el) el.remove();
+            }
+        }
+
+        // GOD MODE LOGIC
+        async function triggerGodMode() {
+            if (!confirm("⚠️ WARNING: INITIATE CRITICAL FAILURE SIMULATION?")) return;
+
+            try {
+                await fetch('/api/simulation/trigger-crisis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'overheat_reactor', asset_id: 'Reactor-RX01' })
+                });
+                alert("🚨 FAILURE INJECTED. WATCH THE DASHBOARD.");
+                startGodModeEffects();
+            } catch (e) { console.error(e); }
+        }
+
+        function startGodModeEffects() {
+            document.getElementById('god-mode-overlay').style.display = 'block';
+            // Simulate AI "Thinking" to fix it
+            setTimeout(() => {
+                addMessage("🚨 <b>CRITICAL ALERT DETECTED</b>: Reactor-RX01 Temperature Exceeding Safety Limits (1000°C+)", 'bot');
+            }, 2000);
+
+            setTimeout(() => {
+                addMessage("⚙️ <b>AI AUTONOMOUS RESPONSE</b>: Initiating Emergency Cooling Protocol...", 'bot');
+            }, 5000);
+
+            setTimeout(() => {
+                addMessage("✅ <b>SUCCESS</b>: Core temperature stabilizing. Rerouting power load.", 'bot');
+                stopGodModeEffects(); // Resolve visually
+                // Call API to reset state
+                fetch('/api/simulation/resolve-crisis', { method: 'POST' });
+            }, 12000);
+        }
+
+        function stopGodModeEffects() {
+            document.getElementById('god-mode-overlay').style.display = 'none';
+        }
+
+        // NEW GOD MODE PANEL FUNCTIONS
+        function toggleGodPanel() {
+            const panel = document.getElementById('god-mode-panel');
+            if (panel.style.right === '0px') {
+                panel.style.right = '-320px';
+            } else {
+                panel.style.right = '0px';
+            }
+        }
+
+        async function triggerCrisis(crisisType) {
+            const crisisMessages = {
+                'overheat_reactor': {
+                    asset: 'Reactor-RX01',
+                    alert: '🔥 <b>ALERTA CRÍTICA</b>: Reactor-RX01 Temp → 1200°C (RIESGO DE FUSIÓN)',
+                    action: '🤖 <b>AI ACTION</b>: Inyectando Cadmio. Inicio protocolo de enfriamiento nivel 5.',
+                    resolution: '✅ <b>CORE ESTABILIZADO</b>: Temperatura nominal. Cero radiación emitida.'
+                },
+                'grid_blackout': {
+                    asset: 'Grid-Main',
+                    alert: '⚡ <b>BLACKOUT TOTAL</b>: Pérdida sincrónica en Subestación Alfa (0 MW).',
+                    action: '🤖 <b>AI ACTION</b>: Arrancando Planta Virtual distribuida. Aislamiento de falla.',
+                    resolution: '✅ <b>SERVICIO RESTAURADO</b>: 98% recuperado en 4.2 segundos.'
+                },
+                // NUEVAS SIMULACIONES DE NEGOCIO
+                'market_crash': {
+                    asset: 'Market-API',
+                    alert: '📉 <b>CRASH BURSÁTIL</b>: Caída global del 18% en futuros de energía.',
+                    action: '🤖 <b>AI HEDGE</b>: Ejecutando coberturas put options y venta corta automática.',
+                    resolution: '✅ <b>CAPITAL BLINDADO</b>: Pérdida evitada. Ganancia extraordinaria: +$1.2M.'
+                },
+                'bio_leak': {
+                    asset: 'Bio-Sensor-X',
+                    alert: '☣️ <b>RIESGO BIOLÓGICO</b>: Contaminante detectado en Suministro de Agua.',
+                    action: '🤖 <b>AI DEFENSE</b>: Válvulas de corte cerradas en 0.2s. Alerta a autoridades enviada.',
+                    resolution: '✅ <b>AGUA SEGURA</b>: Contaminación aislada. Salud pública protegida.'
+                },
+                'reputation_scandal': {
+                    asset: 'Social-Net',
+                    alert: '📢 <b>CRISIS DE RRPP</b>: Fake news viral sobre "Fuga Tóxica" detectada.',
+                    action: '🤖 <b>AI TRUTH</b>: Publicando telemetría certificada en Blockchain y redes sociales.',
+                    resolution: '✅ <b>VERDAD RESTABLECIDA</b>: Confianza del consumidor: 98%.'
+                }
+            };
+
+            const crisis = crisisMessages[crisisType];
+            if (!crisis) return;
+
+            try {
+                await fetch('/api/simulation/trigger-crisis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: crisisType, asset_id: crisis.asset })
+                });
+
+                startCrisisSequence(crisis);
+            } catch (e) { console.error(e); }
+        }
+
+        function startCrisisSequence(crisis) {
+            document.getElementById('god-mode-overlay').style.display = 'block';
+            toggleGodPanel(); // Close panel
+
+            // FORCE OPEN CHAT WIDGET TO SHOW AI RESPONSE
+            openChat();
+
+            // Step 1: Alert - Show immediately
+            setTimeout(() => {
+                addMessage(crisis.alert, 'bot');
+
+                // UPDATE DASHBOARD STATUS TO CRITICAL
+                const statusIndicator = document.getElementById('status-indicator');
+                const statusText = document.getElementById('status-text');
+                statusIndicator.className = 'status-indicator status-critical';
+                statusText.textContent = '🔥 CRISIS ACTIVA';
+            }, 1500);
+
+            // Step 2: AI Action
+            setTimeout(() => {
+                addMessage(crisis.action, 'bot');
+            }, 4500);
+
+            // Step 3: Resolution
+            setTimeout(() => {
+                addMessage(crisis.resolution, 'bot');
+
+                // RESTORE NORMAL STATUS
+                const statusIndicator = document.getElementById('status-indicator');
+                const statusText = document.getElementById('status-text');
+                statusIndicator.className = 'status-indicator status-normal';
+                statusText.textContent = 'Sistema Normal';
+
+                stopGodModeEffects();
+                fetch('/api/simulation/resolve-crisis', { method: 'POST' });
+            }, 10000);
+        }
+
+        async function resolveAllCrises() {
+            try {
+                await fetch('/api/simulation/resolve-crisis', { method: 'POST' });
+                stopGodModeEffects();
+                addMessage('✅ AI OVERRIDE: All systems returned to normal operation.', 'bot');
+                toggleGodPanel();
+            } catch (e) { console.error(e); }
+        }
+
+        function formatResponse(text) {
+            // Un simple formateador de Markdown a HTML
+            let html = text
+                // Bold
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // Headers
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                // Lists
+                .replace(/^\s*-\s(.*$)/gim, '<ul><li>$1</li></ul>')
+                .replace(/<\/ul>\s*<ul>/gim, '') // Merge adjacent lists (simple hack)
+                // New lines
+                .replace(/\n/g, '<br>');
+
+            return html;
+        }
+
+        /* Flash Animation for Crisis */
+        const style = document.createElement('style');
+        style.innerHTML = `
+          @keyframes flash {
+            0% { opacity: 0.1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 0.1; }
+          }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏭 Digital Twin 3D - Reactor Virtual</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            overflow: hidden;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid #00d9ff;
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 300px;
+            z-index: 100;
+        }
+
+        #info-panel h1 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 217, 255, 0.1);
+            border-left: 3px solid #00d9ff;
+            border-radius: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #00d9ff;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid #00d9ff;
+            border-radius: 15px;
+            padding: 15px;
+            z-index: 100;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+
+        #back-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: white;
+            border: 2px solid #60a5fa;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 1rem;
+            z-index: 100;
+            text-decoration: none;
+        }
+
+        #back-btn:hover {
+            background: linear-gradient(135deg, #2563eb, #1e3a8a);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+
+    <div id="info-panel">
+        <h1>🏭 REACTOR DIGITAL TWIN</h1>
+        <div class="metric">
+            <div class="metric-label">🌡️ Temperatura</div>
+            <div class="metric-value" id="temp-display">-- °C</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">💨 Presión</div>
+            <div class="metric-value" id="pressure-display">-- PSI</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">⚙️ Turbina</div>
+            <div class="metric-value" id="turbine-display">--</div>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div style="font-weight: 700; margin-bottom: 10px;">Mapa de Calor:</div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #3b82f6;"></div>
+            <span>Frío (&lt;200°C)</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #10b981;"></div>
+            <span>Normal (200-250°C)</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #f59e0b;"></div>
+            <span>Caliente (250-300°C)</span>
+        </div>
+        <div class="legend-item">
+            <div class="color-box" style="background: #ef4444;"></div>
+            <span>CRÍTICO (&gt;300°C)</span>
+        </div>
+    </div>
+
+    <a href="/energy_dashboard.html" id="back-btn">← Volver al Dashboard</a>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0f172a);
+        scene.fog = new THREE.Fog(0x0f172a, 10, 50);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 5, 10);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0x00d9ff, 1, 100);
+        pointLight.position.set(10, 10, 10);
+        pointLight.castShadow = true;
+        scene.add(pointLight);
+
+        // Reactor (cylinder)
+        const reactorGeometry = new THREE.CylinderGeometry(2, 2, 6, 32);
+        const reactorMaterial = new THREE.MeshPhongMaterial({
+            color: 0x10b981,
+            emissive: 0x10b981,
+            emissiveIntensity: 0.3,
+            shininess: 100
+        });
+        const reactor = new THREE.Mesh(reactorGeometry, reactorMaterial);
+        reactor.castShadow = true;
+        reactor.receiveShadow = true;
+        scene.add(reactor);
+
+        // Base platform
+        const platformGeometry = new THREE.CylinderGeometry(3, 3, 0.5, 32);
+        const platformMaterial = new THREE.MeshPhongMaterial({ color: 0x334155 });
+        const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+        platform.position.y = -3.5;
+        platform.receiveShadow = true;
+        scene.add(platform);
+
+        // Pipes
+        for (let i = 0; i < 4; i++) {
+            const angle = (Math.PI * 2 / 4) * i;
+            const pipeGeometry = new THREE.CylinderGeometry(0.2, 0.2, 4, 16);
+            const pipeMaterial = new THREE.MeshPhongMaterial({ color: 0x64748b });
+            const pipe = new THREE.Mesh(pipeGeometry, pipeMaterial);
+            pipe.position.x = Math.cos(angle) * 2.5;
+            pipe.position.z = Math.sin(angle) * 2.5;
+            pipe.rotation.z = Math.PI / 2;
+            scene.add(pipe);
+        }
+
+        // Grid floor
+        const gridHelper = new THREE.GridHelper(20, 20, 0x00d9ff, 0x1e293b);
+        gridHelper.position.y = -3.8;
+        scene.add(gridHelper);
+
+        // Animation
+        let currentTemp = 220;
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate reactor slowly
+            reactor.rotation.y += 0.005;
+
+            // Update color based on temperature
+            updateReactorColor(currentTemp);
+
+            renderer.render(scene, camera);
+        }
+
+        function updateReactorColor(temp) {
+            let color, emissive, intensity;
+
+            if (temp < 200) {
+                color = 0x3b82f6; // Blue
+                emissive = 0x3b82f6;
+                intensity = 0.2;
+            } else if (temp < 250) {
+                color = 0x10b981; // Green
+                emissive = 0x10b981;
+                intensity = 0.3;
+            } else if (temp < 300) {
+                color = 0xf59e0b; // Orange
+                emissive = 0xf59e0b;
+                intensity = 0.5;
+            } else {
+                color = 0xef4444; // Red
+                emissive = 0xef4444;
+                intensity = 0.8;
+            }
+
+            reactorMaterial.color.setHex(color);
+            reactorMaterial.emissive.setHex(emissive);
+            reactorMaterial.emissiveIntensity = intensity;
+        }
+
+        // Fetch PLC data
+        async function fetchPLCData() {
+            try {
+                const response = await fetch('http://localhost:5001/api/plc/live-data');
+                const data = await response.json();
+
+                if (data.connected) {
+                    currentTemp = data.plc_data.temperatura_reactor;
+                    document.getElementById('temp-display').textContent = currentTemp + ' °C';
+                    document.getElementById('pressure-display').textContent = data.plc_data.presion_valvula + ' PSI';
+                    document.getElementById('turbine-display').textContent = data.plc_data.turbina_estado;
+                }
+            } catch (error) {
+                console.error('Error fetching PLC data:', error);
+            }
+        }
+
+        // Update every 2 seconds
+        fetchPLCData();
+        setInterval(fetchPLCData, 2000);
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Mouse controls (simple rotation)
+        let mouseX = 0;
+        let mouseY = 0;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            camera.position.x = mouseX * 3;
+            camera.position.y = 5 + mouseY * 2;
+            camera.lookAt(0, 0, 0);
+        });
+
+        animate();
+    </script>
+</body>
+
+</html>
