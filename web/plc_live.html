@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏭 Integra Mind - PLC Live View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 217, 255, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .status-connected {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status-disconnected {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(0, 217, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .card h3 {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #00d9ff;
+            margin-bottom: 5px;
+        }
+        
+        .metric-unit {
+            font-size: 1.2rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        .alerts {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .alert-item {
+            background: rgba(30, 41, 59, 0.6);
+            padding: 15px;
+            border-left: 4px solid #ef4444;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        
+        .alert-critical {
+            border-left-color: #ef4444;
+        }
+        
+        .alert-warning {
+            border-left-color: #f59e0b;
+        }
+        
+        .alert-info {
+            border-left-color: #3b82f6;
+        }
+        
+        .timestamp {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.5rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏭 INTEGRA MIND - PLC LIVE SCADA</h1>
+            <p>Lectura directa de PLC Virtual vía Modbus TCP/IP</p>
+            <span id="status-badge" class="status-badge status-disconnected">🔴 DESCONECTADO</span>
+        </div>
+        
+        <div id="loading" class="loading">⏳ Conectando al PLC...</div>
+        
+        <div id="data-container" style="display: none;">
+            <div class="grid">
+                <div class="card">
+                    <h3>🌡️ Temperatura Reactor</h3>
+                    <div class="metric-value" id="temperatura">--</div>
+                    <div class="metric-unit">°C</div>
+                </div>
+                
+                <div class="card">
+                    <h3>💨 Presión Válvula Principal</h3>
+                    <div class="metric-value" id="presion">--</div>
+                    <div class="metric-unit">PSI</div>
+                </div>
+                
+                <div class="card">
+                    <h3>⚙️ Estado Turbina</h3>
+                    <div class="metric-value" id="turbina">--</div>
+                    <div class="metric-unit" id="turbina-rpm">-- RPM</div>
+                </div>
+            </div>
+            
+            <div class="alerts">
+                <h3 style="margin-bottom: 15px;">🚨 Alertas del Sistema</h3>
+                <div id="alerts-container"></div>
+            </div>
+            
+            <div class="timestamp">
+                Última actualización: <span id="timestamp">--</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function fetchPLCData() {
+            try {
+                const response = await fetch('http://localhost:5001/api/plc/live-data');
+                const data = await response.json();
+                
+                if (data.connected) {
+                    // Actualizar estado
+                    document.getElementById('status-badge').textContent = '🟢 CONECTADO';
+                    document.getElementById('status-badge').className = 'status-badge status-connected';
+                    
+                    // Mostrar datos
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('data-container').style.display = 'block';
+                    
+                    // Actualizar métricas
+                    document.getElementById('temperatura').textContent = data.plc_data.temperatura_reactor;
+                    document.getElementById('presion').textContent = data.plc_data.presion_valvula;
+                    document.getElementById('turbina').textContent = data.plc_data.turbina_estado;
+                    document.getElementById('turbina-rpm').textContent = `${data.plc_data.turbina_rpm} RPM`;
+                    
+                    // Actualizar alertas
+                    const alertsContainer = document.getElementById('alerts-container');
+                    if (data.alerts && data.alerts.length > 0) {
+                        alertsContainer.innerHTML = data.alerts.map(alert => `
+                            <div class="alert-item alert-${alert.level}">
+                                <strong>${alert.message}</strong><br>
+                                <small>Asset: ${alert.asset}</small>
+                            </div>
+                        `).join('');
+                    } else {
+                        alertsContainer.innerHTML = '<div style="color: #10b981; text-align: center; padding: 20px;">✅ Sistema Operando Normalmente</div>';
+                    }
+                    
+                    // Timestamp
+                    document.getElementById('timestamp').textContent = new Date(data.timestamp).toLocaleString('es-AR');
+                } else {
+                    document.getElementById('status-badge').textContent = '🔴 ERROR';
+                    document.getElementById('status-badge').className = 'status-badge status-disconnected';
+                }
+                
+            } catch (error) {
+                console.error('Error fetching PLC data:', error);
+                document.getElementById('status-badge').textContent = '🔴 ERROR CONEXIÓN';
+                document.getElementById('status-badge').className = 'status-badge status-disconnected';
+            }
+        }
+        
+        // Actualizar cada 2 segundos
+        setInterval(fetchPLCData, 2000);
+        
+        // Primera lectura inmediata
+        fetchPLCData();
+    </script>
+</body>
+</html>

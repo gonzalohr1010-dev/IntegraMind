@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test Admin API</title>
+</head>
+
+<body>
+    <h1>Test de API Admin</h1>
+    <button onclick="testLeads()">Probar Leads</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testLeads() {
+            const result = document.getElementById('result');
+            result.textContent = 'Cargando...';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/admin/leads', {
+                    headers: {
+                        'X-Admin-Token': 'INTEGRA2026'
+                    }
+                });
+
+                result.textContent = `Status: ${response.status}\n`;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    result.textContent += `✅ Éxito!\n`;
+                    result.textContent += `Leads: ${data.length}\n\n`;
+                    result.textContent += JSON.stringify(data, null, 2);
+                } else {
+                    result.textContent += `❌ Error\n`;
+                    result.textContent += await response.text();
+                }
+            } catch (error) {
+                result.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+
+</html>
