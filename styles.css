@@ -134,6 +134,25 @@ body {
     overflow-x: hidden;
 }
 
+/* --- BRANDING --- */
+.brand-text {
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
+    color: #1e293b;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+[data-theme="dark"] .brand-text {
+    color: #f8fafc;
+}
+
+.brand-highlight {
+    color: var(--primary);
+}
+
 h1,
 h2,
 h3,
@@ -1418,22 +1437,39 @@ footer a:hover {
     padding: 40px;
     border-radius: 20px;
     border: 1px solid var(--border-color);
+    border-bottom: 4px solid var(--border-color);
+    /* Efecto 3D físico */
     text-align: center;
     position: relative;
-    box-shadow: 0 4px 6px -1px var(--shadow-color);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    /* Sombra permanente */
+    cursor: pointer;
 }
 
+/* Sin cambios al hover */
 .pricing-card:hover {
-    border-color: var(--primary);
-    box-shadow: 0 10px 15px -3px var(--shadow-color);
+    /* Estático */
+}
+
+/* Extender el área de click del botón a toda la tarjeta */
+.pricing-card a::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
 }
 
 .pricing-card.featured {
     background: linear-gradient(135deg, rgba(2, 132, 199, 0.05), rgba(79, 70, 229, 0.05));
     border: 2px solid var(--primary);
-    transform: scale(1.02);
+    border-bottom: 5px solid var(--primary);
+    /* 3D acentuado */
     z-index: 10;
-    box-shadow: 0 10px 25px rgba(2, 132, 199, 0.15);
+    box-shadow: 0 15px 30px -5px rgba(2, 132, 199, 0.15);
+    transition: none !important;
 }
 
 .popular-badge {
@@ -1451,14 +1487,135 @@ footer a:hover {
     width: max-content;
 }
 
-/* --- RESPONSIVE --- */
+/* --- RESPONSIVE DESIGN (IPHONE / TABLET) --- */
+
+@media (max-width: 1024px) {
+
+    /* Laptops & Tablets */
+    .hero h1 {
+        font-size: 3rem;
+    }
+
+    nav {
+        padding: 20px 30px;
+    }
+
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
+    /* Mobile Devices */
+
+    /* 1. Navigation (Stacked & Scrollable) */
+    nav {
+        padding: 15px 20px;
+        flex-wrap: wrap;
+    }
+
+    .logo {
+        font-size: 1.2rem;
+    }
+
+    .nav-links {
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+        display: flex;
+        gap: 15px;
+        padding: 15px 0 5px;
+        margin-top: 10px;
+        border-top: 1px solid var(--border-color);
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-links a {
+        background: var(--bg-card);
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        font-size: 0.9rem;
+    }
+
+    /* Hide the CTA button text on very small screens, keep icon? Or just make it smaller */
+    .cta-button {
+        padding: 8px 15px;
+        font-size: 0.85rem;
+    }
+
+    /* 2. Typography */
+    .hero h1 {
+        font-size: 2.2rem;
+        word-wrap: break-word;
+        /* Prevent text overflow */
+        hyphens: manual;
+    }
+
+    .hero p {
+        font-size: 1rem;
+        padding: 0;
+    }
+
+    .section-header h2 {
+        font-size: 2rem;
+    }
+
+    /* 3. Layout & Grids */
+    .hero {
+        padding-top: 140px;
+        /* Accounts for larger nav area */
+        padding-bottom: 50px;
+        height: auto;
+        min-height: auto;
+    }
+
+    .features,
+    #use-cases,
+    #pricing,
+    footer,
+    #contact {
+        padding: 60px 20px !important;
+    }
+
+    .grid,
+    .pricing-grid,
+    .testimonials-grid {
+        grid-template-columns: 1fr !important;
+        gap: 30px;
+    }
+
+    .pricing-grid {
+        padding: 0 10px;
+    }
+
+    /* Statistics Grid on Mobile */
+    .stats-banner>div {
+        grid-template-columns: 1fr 1fr;
+        /* 2 columns for stats */
+    }
+
+    /* 4. Components */
     .floating-node {
-        width: 50px !important;
-        height: 50px !important;
+        transform: scale(0.6);
     }
 
     .neural-visualization-container {
-        height: 400px !important;
+        height: 300px !important;
+    }
+
+    .pricing-card.featured {
+        transform: none;
+        /* No scaling on mobile */
+    }
+
+    .contact-container {
+        padding: 20px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
     }
 }

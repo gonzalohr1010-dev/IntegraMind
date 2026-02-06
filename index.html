@@ -28,21 +28,7 @@
 
     <link rel="icon" type="image/png" href="assets/integra_favicon.png">
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* Estilo rápido para la marca (Inline para asegurar) */
-        .brand-text {
-            font-weight: 800;
-            font-size: 1.5rem;
-            letter-spacing: -0.5px;
-            color: #1e293b;
-            text-decoration: none;
-        }
 
-        .brand-highlight {
-            color: #3b82f6;
-            /* Azul brillante */
-        }
-    </style>
 </head>
 
 <body>
@@ -56,8 +42,7 @@
             <a href="#features">Tecnología</a>
             <a href="#use-cases">Soluciones</a>
             <a href="#pricing">Precios</a>
-            <a href="#testimonials">Casos de Éxito</a>
-            <a href="#roi">Impacto</a>
+
         </div>
         <div style="display: flex; align-items: center; gap: 20px;">
             <!-- Notification Center -->
@@ -727,18 +712,28 @@
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px;">
                 <!-- Company Info -->
                 <div>
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-                        <img src="assets/logo.png" alt="Integra Mind Logo" height="35">
-                        <span style="font-size: 1.3rem; font-weight: 700; color: white;">INTEGRA MIND</span>
+                    <div style="margin-bottom: 20px;">
+                        <!-- Footer Logo as Text -->
+                        <a href="#" class="brand-text" style="color: white; font-size: 1.5rem;">INTEGRA <span
+                                class="brand-highlight">MIND</span></a>
                     </div>
                     <p style="line-height: 1.8; margin-bottom: 20px;">
                         Transformando infraestructura crítica con Inteligencia Artificial de vanguardia. Hacemos que las
                         redes obsoletas sean autónomas, predictivas y seguras.
                     </p>
                     <div style="display: flex; gap: 15px;">
-                        <a href="#" style="color: var(--primary); font-size: 1.5rem; transition: color 0.3s;">🔗</a>
-                        <a href="#" style="color: var(--primary); font-size: 1.5rem; transition: color 0.3s;">📧</a>
-                        <a href="#" style="color: var(--primary); font-size: 1.5rem; transition: color 0.3s;">📱</a>
+                        <a href="#" aria-label="LinkedIn"
+                            style="color: var(--primary); font-size: 1.5rem; transition: transform 0.3s; text-decoration: none;"
+                            onmouseover="this.style.transform='scale(1.2)'"
+                            onmouseout="this.style.transform='scale(1)'">🔗</a>
+                        <a href="mailto:info@integramind.ai" aria-label="Email"
+                            style="color: var(--primary); font-size: 1.5rem; transition: transform 0.3s; text-decoration: none;"
+                            onmouseover="this.style.transform='scale(1.2)'"
+                            onmouseout="this.style.transform='scale(1)'">📧</a>
+                        <a href="tel:+123456789" aria-label="Phone"
+                            style="color: var(--primary); font-size: 1.5rem; transition: transform 0.3s; text-decoration: none;"
+                            onmouseover="this.style.transform='scale(1.2)'"
+                            onmouseout="this.style.transform='scale(1)'">📱</a>
                     </div>
                 </div>
 
@@ -772,9 +767,9 @@
                         style="color: white; margin-bottom: 20px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">
                         Empresa</h4>
                     <ul style="list-style: none; padding: 0; line-height: 2.2;">
-                        <li><a href="#testimonials"
-                                style="color: #94a3b8; text-decoration: none; transition: color 0.3s;">Casos de
-                                Éxito</a></li>
+                        <li><a href="#use-cases"
+                                style="color: #94a3b8; text-decoration: none; transition: color 0.3s;">Industrias</a>
+                        </li>
                         <li><a href="#pricing"
                                 style="color: #94a3b8; text-decoration: none; transition: color 0.3s;">Precios</a></li>
                         <li><a href="#faq"
