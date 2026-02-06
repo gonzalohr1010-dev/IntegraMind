@@ -26,8 +26,9 @@
     <meta property="twitter:image"
         content="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80">
 
-    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="icon" type="image/png" href="assets/integra_favicon.png">
     <link rel="stylesheet" href="styles.css">
+
 </head>
 
 <body>
@@ -35,14 +36,13 @@
     <!-- NAV -->
     <nav>
         <div class="logo">
-            <img src="assets/logo.png" alt="Integra Mind Logo" height="40"> INTEGRA MIND
+            <a href="#" class="brand-text">INTEGRA <span class="brand-highlight">MIND</span></a>
         </div>
         <div class="nav-links">
             <a href="#features">Tecnología</a>
             <a href="#use-cases">Soluciones</a>
             <a href="#pricing">Precios</a>
-            <a href="#testimonials">Casos de Éxito</a>
-            <a href="#roi">Impacto</a>
+
         </div>
         <div style="display: flex; align-items: center; gap: 20px;">
             <!-- Notification Center -->
@@ -79,9 +79,10 @@
     <header class="hero">
         <div class="hero-content">
             <div class="hero-tag">Inteligencia Artificial para Utilities</div>
-            <h1 class="fade-in">Autonomía para Infraestructura Crítica</h1>
-            <p class="fade-in">Transformamos redes eléctricas obsoletas en sistemas autónomos, predictivos y seguros
-                mediante IA Generativa y Machine Learning.</p>
+            <h1 class="fade-in"><span style="white-space: nowrap;">Automatización inteligente</span><br>para empresas
+            </h1>
+            <p class="fade-in">Transformamos la información de infraestructuras críticas heredadas en sistemas
+                inteligentes, autónomos, predictivos y seguros mediante IA Generativa y Machine Learning.</p>
             <div class="fade-in" style="margin-top: 30px;">
                 <a href="../energy_dashboard.html" class="cta-button">Iniciar Piloto</a>
                 <a href="#features" style="color: white; margin-left: 20px; text-decoration: none;">Saber más ↓</a>
@@ -92,8 +93,9 @@
     <!-- FEATURES -->
     <section id="features" class="features">
         <div class="section-header fade-in">
-            <h2>El Problema de la Red Ciega</h2>
-            <p>Las operadoras pierden millones diariamente por falta de visibilidad. Integra Mind devuelve el control.
+            <h2>El problema de la baja visibilidad de la información operativa</h2>
+            <p>La falta de visibilidad operativa cuesta perdidas economicas . Integra Mind habilita control y toma de
+                decisiones informada.
             </p>
         </div>
 
@@ -102,8 +104,8 @@
             <div class="card fade-in">
                 <div class="icon">🔮</div>
                 <h3>Predicción de Demanda</h3>
-                <p>Nuestros modelos de Deep Learning anticipan picos de carga con 98% de precisión, permitiendo una
-                    compra de energía optimizada y reduciendo costos spot.</p>
+                <p>Nuestros modelos de Deep Learning predicen fluctuaciones operativas con altos niveles de precisión,
+                    facilitando decisiones estratégicas que optimizan recursos y reducen costos.</p>
             </div>
 
             <!-- Card 2 -->
@@ -118,8 +120,8 @@
             <div class="card fade-in">
                 <div class="icon">🔧</div>
                 <h3>Mantenimiento Predictivo</h3>
-                <p>No espere a la falla. Analizamos vibraciones, gases y temperatura para predecir la vida útil de
-                    transformadores y evitar apagones catastróficos.</p>
+                <p>No espere a la falla. Analizamos múltiples variables operativas para
+                    anticipar la vida útil de activos críticos y evitar interrupciones de alto impacto.</p>
             </div>
         </div>
     </section>
@@ -367,35 +369,15 @@
         </div>
     </section>
 
-    <!-- ROI / METRICS -->
-    <section id="roi" class="metrics">
-        <div class="section-header fade-in">
-            <h2>Impacto Financiero Real</h2>
-            <p>Resultados probados en nuestra simulación operacional.</p>
-        </div>
 
-        <div class="stat-grid">
-            <div class="stat-item fade-in">
-                <span class="stat-number" data-target="19393946">$0</span>
-                <span class="stat-label">Ahorro Anual Proyectado</span>
-            </div>
-            <div class="stat-item fade-in">
-                <span class="stat-number" data-target="1939">0%</span>
-                <span class="stat-label">ROI Primer Año</span>
-            </div>
-            <div class="stat-item fade-in">
-                <span class="stat-number" data-target="99.9">0%</span>
-                <span class="stat-label">Uptime del Sistema</span>
-            </div>
-        </div>
-    </section>
 
     <!-- UNIVERSAL USE CASES -->
     <section id="use-cases" class="features"
         style="background: linear-gradient(180deg, var(--bg-dark) 0%, #0f172a 100%);">
         <div class="section-header fade-in">
             <h2>Soluciones Universales</h2>
-            <p>Integra Mind no es solo energía. Nuestra arquitectura "Reality Weaver" se adapta a cualquier industria.
+            <p>IntegraMind va más allá de un sector específico. Nuestra arquitectura Reality Weaver se adapta a
+                cualquier industria.
             </p>
         </div>
 
@@ -454,122 +436,7 @@
         </div>
     </section>
 
-    <!-- TESTIMONIALS / SUCCESS STORIES -->
-    <section id="testimonials" class="features"
-        style="background: linear-gradient(180deg, #0f172a 0%, var(--bg-dark) 100%); padding: 100px 50px;">
-        <div class="section-header fade-in">
-            <h2>Casos de Éxito Reales 🏆</h2>
-            <p>Empresas líderes ya están transformando sus operaciones con Integra Mind</p>
-        </div>
 
-        <div class="testimonials-grid"
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; max-width: 1200px; margin: 50px auto 0;">
-            <!-- Testimonial 1 -->
-            <div class="testimonial-card fade-in"
-                style="background: var(--bg-card); padding: 30px; border-radius: 15px; border-left: 4px solid var(--primary); position: relative;">
-                <div
-                    style="font-size: 3rem; color: var(--primary); opacity: 0.2; position: absolute; top: 10px; right: 20px;">
-                    "</div>
-                <p style="color: var(--text-muted); font-style: italic; margin-bottom: 20px; line-height: 1.8;">
-                    "Redujimos nuestras pérdidas no técnicas en un 34% en solo 6 meses. El sistema de detección de
-                    fraude es increíblemente preciso y nos ha permitido recuperar millones en ingresos perdidos."
-                </p>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div
-                        style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white;">
-                        ⚡</div>
-                    <div>
-                        <div style="font-weight: 600; color: var(--text-main);">Carlos Mendoza</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">Director de Operaciones - Energía del
-                            Sur</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Testimonial 2 -->
-            <div class="testimonial-card fade-in"
-                style="background: var(--bg-card); padding: 30px; border-radius: 15px; border-left: 4px solid var(--success); position: relative;">
-                <div
-                    style="font-size: 3rem; color: var(--success); opacity: 0.2; position: absolute; top: 10px; right: 20px;">
-                    "</div>
-                <p style="color: var(--text-muted); font-style: italic; margin-bottom: 20px; line-height: 1.8;">
-                    "La predicción de demanda ha revolucionado nuestra planificación. Ahora compramos energía con 98% de
-                    precisión, ahorrando $2.3M anuales en costos de mercado spot."
-                </p>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div
-                        style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--success), #22c55e); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white;">
-                        💧</div>
-                    <div>
-                        <div style="font-weight: 600; color: var(--text-main);">Ana Rodríguez</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">CFO - Hidro Nacional</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Testimonial 3 -->
-            <div class="testimonial-card fade-in"
-                style="background: var(--bg-card); padding: 30px; border-radius: 15px; border-left: 4px solid var(--secondary); position: relative;">
-                <div
-                    style="font-size: 3rem; color: var(--secondary); opacity: 0.2; position: absolute; top: 10px; right: 20px;">
-                    "</div>
-                <p style="color: var(--text-muted); font-style: italic; margin-bottom: 20px; line-height: 1.8;">
-                    "El mantenimiento predictivo evitó 3 fallas catastróficas en transformadores críticos. El ROI fue
-                    positivo en menos de 4 meses. Simplemente impresionante."
-                </p>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div
-                        style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--secondary), #6366f1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white;">
-                        🏭</div>
-                    <div>
-                        <div style="font-weight: 600; color: var(--text-main);">Miguel Torres</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">Gerente de Mantenimiento - Industrial
-                            SA</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stats Banner -->
-        <div class="stats-banner fade-in"
-            style="margin-top: 60px; background: rgba(0, 242, 255, 0.05); border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 15px; padding: 40px; max-width: 1000px; margin-left: auto; margin-right: auto;">
-            <div
-                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; text-align: center;">
-                <div>
-                    <div
-                        style="font-size: 2.5rem; font-weight: 700; color: var(--primary); font-family: 'Rajdhani', sans-serif;">
-                        150+</div>
-                    <div
-                        style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">
-                        Clientes Activos</div>
-                </div>
-                <div>
-                    <div
-                        style="font-size: 2.5rem; font-weight: 700; color: var(--primary); font-family: 'Rajdhani', sans-serif;">
-                        $45M+</div>
-                    <div
-                        style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">
-                        Ahorros Generados</div>
-                </div>
-                <div>
-                    <div
-                        style="font-size: 2.5rem; font-weight: 700; color: var(--primary); font-family: 'Rajdhani', sans-serif;">
-                        24/7</div>
-                    <div
-                        style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">
-                        Soporte Técnico</div>
-                </div>
-                <div>
-                    <div
-                        style="font-size: 2.5rem; font-weight: 700; color: var(--primary); font-family: 'Rajdhani', sans-serif;">
-                        15 Países</div>
-                    <div
-                        style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">
-                        Presencia Global</div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- PRICING / PLANS -->
     <section id="pricing" class="features" style="background: var(--bg-dark); padding: 100px 50px;">
@@ -581,8 +448,7 @@
         <div class="pricing-grid"
             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1200px; margin: 50px auto 0;">
             <!-- Plan 1: Pilot -->
-            <div class="pricing-card fade-in"
-                style="background: var(--bg-card); padding: 40px; border-radius: 20px; border: 1px solid #e2e8f0; text-align: center; transition: transform 0.3s, box-shadow 0.3s;">
+            <div class="pricing-card fade-in">
                 <div style="font-size: 2rem; margin-bottom: 15px;">🚀</div>
                 <h3 style="margin-bottom: 10px; font-size: 1.8rem;">Piloto</h3>
                 <div style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Ideal para validar el
@@ -606,10 +472,8 @@
             </div>
 
             <!-- Plan 2: Professional (HIGHLIGHTED) -->
-            <div class="pricing-card fade-in"
-                style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.1), rgba(79, 70, 229, 0.1)); padding: 40px; border-radius: 20px; border: 2px solid var(--primary); text-align: center; transform: scale(1.05); box-shadow: 0 10px 40px rgba(2, 132, 199, 0.3); position: relative;">
-                <div
-                    style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 5px 20px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+            <div class="pricing-card featured fade-in">
+                <div class="popular-badge">
                     MÁS POPULAR</div>
                 <div style="font-size: 2rem; margin-bottom: 15px;">⚡</div>
                 <h3 style="margin-bottom: 10px; font-size: 1.8rem;">Profesional</h3>
@@ -635,8 +499,7 @@
             </div>
 
             <!-- Plan 3: Enterprise -->
-            <div class="pricing-card fade-in"
-                style="background: var(--bg-card); padding: 40px; border-radius: 20px; border: 1px solid #e2e8f0; text-align: center; transition: transform 0.3s, box-shadow 0.3s;">
+            <div class="pricing-card fade-in">
                 <div style="font-size: 2rem; margin-bottom: 15px;">🏢</div>
                 <h3 style="margin-bottom: 10px; font-size: 1.8rem;">Enterprise</h3>
                 <div style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Solución a medida</div>
@@ -849,18 +712,28 @@
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px;">
                 <!-- Company Info -->
                 <div>
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-                        <img src="assets/logo.png" alt="Integra Mind Logo" height="35">
-                        <span style="font-size: 1.3rem; font-weight: 700; color: white;">INTEGRA MIND</span>
+                    <div style="margin-bottom: 20px;">
+                        <!-- Footer Logo as Text -->
+                        <a href="#" class="brand-text" style="color: white; font-size: 1.5rem;">INTEGRA <span
+                                class="brand-highlight">MIND</span></a>
                     </div>
                     <p style="line-height: 1.8; margin-bottom: 20px;">
                         Transformando infraestructura crítica con Inteligencia Artificial de vanguardia. Hacemos que las
                         redes obsoletas sean autónomas, predictivas y seguras.
                     </p>
                     <div style="display: flex; gap: 15px;">
-                        <a href="#" style="color: var(--primary); font-size: 1.5rem; transition: color 0.3s;">🔗</a>
-                        <a href="#" style="color: var(--primary); font-size: 1.5rem; transition: color 0.3s;">📧</a>
-                        <a href="#" style="color: var(--primary); font-size: 1.5rem; transition: color 0.3s;">📱</a>
+                        <a href="#" aria-label="LinkedIn"
+                            style="color: var(--primary); font-size: 1.5rem; transition: transform 0.3s; text-decoration: none;"
+                            onmouseover="this.style.transform='scale(1.2)'"
+                            onmouseout="this.style.transform='scale(1)'">🔗</a>
+                        <a href="mailto:info@integramind.ai" aria-label="Email"
+                            style="color: var(--primary); font-size: 1.5rem; transition: transform 0.3s; text-decoration: none;"
+                            onmouseover="this.style.transform='scale(1.2)'"
+                            onmouseout="this.style.transform='scale(1)'">📧</a>
+                        <a href="tel:+123456789" aria-label="Phone"
+                            style="color: var(--primary); font-size: 1.5rem; transition: transform 0.3s; text-decoration: none;"
+                            onmouseover="this.style.transform='scale(1.2)'"
+                            onmouseout="this.style.transform='scale(1)'">📱</a>
                     </div>
                 </div>
 
@@ -894,9 +767,9 @@
                         style="color: white; margin-bottom: 20px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">
                         Empresa</h4>
                     <ul style="list-style: none; padding: 0; line-height: 2.2;">
-                        <li><a href="#testimonials"
-                                style="color: #94a3b8; text-decoration: none; transition: color 0.3s;">Casos de
-                                Éxito</a></li>
+                        <li><a href="#use-cases"
+                                style="color: #94a3b8; text-decoration: none; transition: color 0.3s;">Industrias</a>
+                        </li>
                         <li><a href="#pricing"
                                 style="color: #94a3b8; text-decoration: none; transition: color 0.3s;">Precios</a></li>
                         <li><a href="#faq"
