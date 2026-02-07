@@ -11,7 +11,7 @@ from datetime import datetime
 import os
 
 class EmailSender:
-    def __init__(self, smtp_server="smtp.gmail.com", smtp_port=587):
+    def __init__(self, smtp_server=None, smtp_port=None):
         """
         Inicializar el sistema de email
         
@@ -19,15 +19,18 @@ class EmailSender:
         1. Crear una "App Password" en tu cuenta de Google
         2. Ir a: https://myaccount.google.com/apppasswords
         3. Generar contraseña para "Mail"
-        4. Usar esa contraseña aquí
+        4. Configurar variables de entorno en Render
         """
-        self.smtp_server = smtp_server
-        self.smtp_port = smtp_port
+        self.smtp_server = smtp_server or os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+        self.smtp_port = smtp_port or int(os.getenv('SMTP_PORT', '587'))
         
-        # CONFIGURACIÓN: Cambiar estos valores
-        self.sender_email = os.getenv('EMAIL_USER', 'gonzalohr1010@gmail.com')
-        self.sender_password = os.getenv('EMAIL_PASSWORD', 'apix jtzr yxeo cxnc')
-        self.sender_name = "Integra Mind Energy"
+        # Leer credenciales de variables de entorno
+        self.sender_email = os.getenv('SMTP_USER') or os.getenv('SENDER_EMAIL')
+        self.sender_password = os.getenv('SMTP_PASSWORD')
+        self.sender_name = os.getenv('SENDER_NAME', 'Integra Mind Energy')
+        
+        if not self.sender_email or not self.sender_password:
+            raise ValueError("❌ SMTP_USER y SMTP_PASSWORD deben estar configurados en las variables de entorno")
     
     def send_report_email(self, recipient_email, recipient_name, company_name, pdf_path):
         """

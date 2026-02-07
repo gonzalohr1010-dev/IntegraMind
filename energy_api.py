@@ -575,6 +575,11 @@ def register_lead():
         print(f"Error registrando lead: {e}")
         return jsonify({'error': 'Error interno al guardar datos'}), 500
 
+@app.route('/api/admin/ping', methods=['GET'])
+def admin_ping():
+    """Endpoint de prueba simple"""
+    return jsonify({'status': 'OK', 'message': 'energy_api.py is alive!'})
+
 
 @app.route('/api/admin/debug-leads', methods=['GET'])
 def debug_leads():
@@ -793,13 +798,39 @@ def generate_executive_report():
                 
                 if client_email:
                     print(f"📧 Enviando reporte a: {client_email}")
-                    from email_sender import send_report_to_client
-                    email_result = send_report_to_client(
-                        client_email, 
-                        client_name, 
-                        industry, 
-                        report_path
-                    )
+                    
+                    # Envolver en timeout para evitar que Gunicorn mate el worker
+                    import signal
+                    
+                    def timeout_handler(signum, frame):
+                        raise TimeoutError("SMTP timeout after 20 seconds")
+                    
+                    try:
+                        # Configurar alarma de 20 segundos
+                        signal.signal(signal.SIGALRM, timeout_handler)
+                        signal.alarm(20)
+                        
+                        from email_sender import send_report_to_client
+                        email_result = send_report_to_client(
+                            client_email, 
+                            client_name, 
+                            industry, 
+                            report_path
+                        )
+                        
+                        # Cancelar alarma si terminó a tiempo
+                        signal.alarm(0)
+                        
+                    except TimeoutError as te:
+                        signal.alarm(0)  # Cancelar alarma
+                        print(f"⏱️ Timeout enviando email: {te}")
+                        email_result = False
+                        email_status = "Timeout SMTP (>20s)"
+                    except Exception as email_send_err:
+                        signal.alarm(0)  # Cancelar alarma
+                        print(f"❌ Error SMTP: {email_send_err}")
+                        email_result = False
+                        email_status = f"Error SMTP: {str(email_send_err)[:100]}"
                     
                     if email_result:
                         email_status = "Enviado con éxito"
