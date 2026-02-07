@@ -529,25 +529,35 @@ def register_lead():
         return jsonify({'error': 'El email es obligatorio'}), 400
     
     try:
-        conn = get_db()
+        # USAR POSTGRESQL
+        import sys
+        import os
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from db_config import get_db_connection
+        
+        conn, db_type = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute("""
-            INSERT INTO leads (name, email, company, role, interested_in)
-            VALUES (?, ?, ?, ?, ?)
-        """, (
-            data.get('name'),
-            data.get('email'),
-            data.get('company'),
-            data.get('role'),
-            data.get('interest') # Puede ser 'pilot', 'demo', 'info'
-        ))
+        print(f"🔵 Registrando lead en {db_type}: {data.get('email')}")
+        
+        if db_type == 'postgresql':
+            cursor.execute("""
+                INSERT INTO leads (name, email, company, role, interest)
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id
+            """, (data.get('name'), data.get('email'), data.get('company'), data.get('role'), data.get('interest')))
+            lead_id = cursor.fetchone()['id']
+        else:
+            cursor.execute("""
+                INSERT INTO leads (name, email, company, role, interest)
+                VALUES (?, ?, ?, ?, ?)
+            """, (data.get('name'), data.get('email'), data.get('company'), data.get('role'), data.get('interest')))
+            lead_id = cursor.lastrowid
         
         conn.commit()
-        lead_id = cursor.lastrowid
         conn.close()
         
-        print(f"📝 Nuevo Lead Registrado: {data.get('email')}")
+        print(f"✅ Lead guardado con ID: {lead_id}")
         
         return jsonify({
             'success': True, 
@@ -556,6 +566,13 @@ def register_lead():
         })
         
     except Exception as e:
+        try:
+            with open('error_log.txt', 'a', encoding='utf-8') as f:
+                f.write(f"ERROR REGISTRANDO LEAD: {str(e)}\n")
+                import traceback
+                traceback.print_exc(file=f)
+        except:
+            pass
         print(f"Error registrando lead: {e}")
         return jsonify({'error': 'Error interno al guardar datos'}), 500
 

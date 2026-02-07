@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+import sys
+# Fix encoding for Windows console
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except AttributeError:
+    pass
+
 import os
 import json
 import sqlite3
@@ -36,9 +43,9 @@ app = Flask(__name__, static_folder=None)
 try:
     from energy_api import energy_bp
     app.register_blueprint(energy_bp)
-    print("✅ Módulo de Energía integrado correctamente")
+    print("[INFO] Modulo de Energia integrado correctamente")
 except Exception as e:
-    print(f"⚠️ Advertencia: No se pudo cargar el módulo de energía: {e}")
+    print(f"[WARN] No se pudo cargar el modulo de energia: {e}")
 
 # ============================================
 # CORS CONFIGURATION
