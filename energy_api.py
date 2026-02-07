@@ -540,21 +540,14 @@ def register_lead():
         conn, db_type = get_db_connection()
         cursor = conn.cursor()
         
-        print(f"🔵 Registrando lead en {db_type}: {data.get('email')}")
+        print(f"🔵 Registrando lead en PostgreSQL: {data.get('email')}")
         
-        if db_type == 'postgresql':
-            cursor.execute("""
-                INSERT INTO leads (name, email, company, role, interest)
-                VALUES (%s, %s, %s, %s, %s)
-                RETURNING id
-            """, (data.get('name'), data.get('email'), data.get('company'), data.get('role'), data.get('interest')))
-            lead_id = cursor.fetchone()['id']
-        else:
-            cursor.execute("""
-                INSERT INTO leads (name, email, company, role, interest)
-                VALUES (?, ?, ?, ?, ?)
-            """, (data.get('name'), data.get('email'), data.get('company'), data.get('role'), data.get('interest')))
-            lead_id = cursor.lastrowid
+        cursor.execute("""
+            INSERT INTO leads (name, email, company, role, interest)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id
+        """, (data.get('name'), data.get('email'), data.get('company'), data.get('role'), data.get('interest')))
+        lead_id = cursor.fetchone()['id']
         
         conn.commit()
         conn.close()
@@ -738,14 +731,9 @@ def generate_executive_report():
                 conn, db_type = get_db_connection()
                 cursor = conn.cursor()
                 
-                if db_type == 'postgresql':
-                    cursor.execute("SELECT email FROM leads WHERE id = %s", (lead_id,))
-                    row = cursor.fetchone()
-                    client_email = row['email'] if row else None
-                else:
-                    cursor.execute("SELECT email FROM leads WHERE id = ?", (lead_id,))
-                    row = cursor.fetchone()
-                    client_email = row['email'] if row else None # sqlite3.Row access
+                cursor.execute("SELECT email FROM leads WHERE id = %s", (lead_id,))
+                row = cursor.fetchone()
+                client_email = row['email'] if row else None
                 
                 conn.close()
                 
@@ -768,22 +756,13 @@ def generate_executive_report():
                             cursor = conn.cursor()
                             now = datetime.now()
                             
-                            if db_type == 'postgresql':
-                                cursor.execute("""
-                                    UPDATE leads 
-                                    SET report_generated = 1, 
-                                        report_sent_at = %s,
-                                        report_file_path = %s
-                                    WHERE id = %s
-                                """, (now, report_path, lead_id))
-                            else:
-                                cursor.execute("""
-                                    UPDATE leads 
-                                    SET report_generated = 1, 
-                                        report_sent_at = ?,
-                                        report_file_path = ?
-                                    WHERE id = ?
-                                """, (now, report_path, lead_id))
+                            cursor.execute("""
+                                UPDATE leads 
+                                SET report_generated = 1, 
+                                    report_sent_at = %s,
+                                    report_file_path = %s
+                                WHERE id = %s
+                            """, (now, report_path, lead_id))
                             
                             conn.commit()
                             conn.close()
@@ -793,8 +772,8 @@ def generate_executive_report():
                     else:
                         email_status = "Fallo envío SMTP"
                 else:
-                    email_status = "Email no encontrado en DB"
-                    print(f"⚠️ No se encontró email para Lead ID {lead_id}")
+                    email_status = f"Email no encontrado en DB (lead_id={lead_id})"
+                    print(f"⚠️ No se encontró email para lead_id={lead_id}")
                     
             except Exception as email_err:
                 print(f"❌ Error proceso email: {email_err}")
