@@ -206,3 +206,4 @@ def ensure_tables():
         conn.rollback()
     finally:
         conn.close()
+# PostgreSQL migration - 2026-02-06
