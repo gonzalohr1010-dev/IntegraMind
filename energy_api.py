@@ -703,11 +703,9 @@ def get_knowledge_graph():
 
 from email_sender import send_report_to_client
 
-# NOTA: Esta ruta está duplicada en server.py - se comenta para evitar conflictos
-"""
 @app.route('/api/admin/generate-report', methods=['POST'])
 def generate_executive_report():
-    \"\"\"Generar reporte ejecutivo PDF para un lead/cliente\"\"\"
+    """Generar reporte ejecutivo PDF para un lead/cliente"""
     # Verificar autenticación
     token = request.headers.get('X-Admin-Token')
     if token != 'INTEGRA2026':
@@ -721,6 +719,7 @@ def generate_executive_report():
     
     try:
         # Generar reporte
+        from pdf_report_generator import generate_client_report
         report_path = generate_client_report(client_name, industry, lead_id)
         
         email_status = "No solicitado"
@@ -728,37 +727,120 @@ def generate_executive_report():
         # Enviar email si se solicita y hay lead_id
         if should_send_email and lead_id:
             try:
-                conn = get_db()
+                # Usar PostgreSQL/SQLite vía db_config
+                import sys
+                import os
+                sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+                from db_config import get_db_connection
+                
+                conn, db_type = get_db_connection()
                 cursor = conn.cursor()
-                cursor.execute("SELECT email FROM leads WHERE id = ?", (lead_id,))
-                row = cursor.fetchone()
+                
+                if db_type == 'postgresql':
+                    cursor.execute("SELECT email FROM leads WHERE id = %s", (lead_id,))
+                    row = cursor.fetchone()
+                    client_email = row['email'] if row else None
+                else:
+                    cursor.execute("SELECT email FROM leads WHERE id = ?", (lead_id,))
+                    row = cursor.fetchone()
+                    client_email = row['email'] if row else None # sqlite3.Row access
+                
                 conn.close()
                 
-                if row and row['email']:
+                if client_email:
+                    print(f"📧 Enviando reporte a: {client_email}")
+                    from email_sender import send_report_to_client
                     email_result = send_report_to_client(
-                        row['email'], 
+                        client_email, 
                         client_name, 
                         industry, 
                         report_path
                     )
-                    email_status = "Enviado" if email_result else "Fallo envío"
+                    
+                    if email_result:
+                        email_status = "Enviado con éxito"
+                        
+                        # Actualizar estado en DB
+                        try:
+                            conn, db_type = get_db_connection()
+                            cursor = conn.cursor()
+                            now = datetime.now()
+                            
+                            if db_type == 'postgresql':
+                                cursor.execute("""
+                                    UPDATE leads 
+                                    SET report_generated = 1, 
+                                        report_sent_at = %s,
+                                        report_file_path = %s
+                                    WHERE id = %s
+                                """, (now, report_path, lead_id))
+                            else:
+                                cursor.execute("""
+                                    UPDATE leads 
+                                    SET report_generated = 1, 
+                                        report_sent_at = ?,
+                                        report_file_path = ?
+                                    WHERE id = ?
+                                """, (now, report_path, lead_id))
+                            
+                            conn.commit()
+                            conn.close()
+                        except Exception as e:
+                            print(f"⚠️ Error actualizando estado en DB: {e}")
+                            
+                    else:
+                        email_status = "Fallo envío SMTP"
                 else:
-                    email_status = "Email no encontrado"
+                    email_status = "Email no encontrado en DB"
+                    print(f"⚠️ No se encontró email para Lead ID {lead_id}")
+                    
             except Exception as email_err:
-                print(f"Error email: {email_err}")
+                print(f"❌ Error proceso email: {email_err}")
+                import traceback
+                traceback.print_exc()
                 email_status = f"Error: {str(email_err)}"
         
         return jsonify({
             'success': True,
             'message': 'Reporte generado exitosamente',
             'file_path': report_path,
-            'download_url': f'/reports/{report_path.split("/")[-1]}',
+            'download_url': f'/reports/{os.path.basename(report_path)}',
             'email_status': email_status
         })
     except Exception as e:
-        print(f"Error generando reporte: {e}")
+        print(f"❌ Error generando reporte: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-"""
+
+@app.route('/api/admin/lead/<int:lead_id>', methods=['DELETE'])
+def delete_lead(lead_id):
+    """Eliminar un lead por ID"""
+    token = request.headers.get('X-Admin-Token')
+    if token != 'INTEGRA2026':
+        return jsonify({'error': 'Acceso Denegado'}), 401
+        
+    try:
+        import sys
+        import os
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from db_config import get_db_connection
+        
+        conn, db_type = get_db_connection()
+        cursor = conn.cursor()
+        
+        if db_type == 'postgresql':
+            cursor.execute("DELETE FROM leads WHERE id = %s", (lead_id,))
+        else:
+            cursor.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
+            
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': f'Lead {lead_id} eliminado'})
+    except Exception as e:
+        print(f"Error eliminando lead: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/admin/list-reports', methods=['GET'])
 def list_reports():
