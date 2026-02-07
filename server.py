@@ -32,7 +32,7 @@ INDEX_DIR = os.path.join(BASE_DIR, 'index_store')
 
 
 def ensure_db():
-    from db_config import ensure_tables
+    from database_configuration import ensure_tables
     ensure_tables()
 
 
@@ -145,7 +145,7 @@ def get_leads_legacy():
     
     # Get real leads from database
     try:
-        from db_config import get_db_connection
+        from database_configuration import get_db_connection
         conn, db_type = get_db_connection()
         cur = conn.cursor()
         

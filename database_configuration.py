@@ -1,5 +1,5 @@
 """
-Database configuration module
+Database configuration module (Renamed to force cache invalidation)
 SOLO PostgreSQL - Sin fallback a SQLite
 """
 import os
@@ -18,7 +18,11 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 def get_db_connection():
     """Get PostgreSQL database connection"""
     if not DATABASE_URL:
-        raise Exception("❌ DATABASE_URL no está configurada. Configura tu archivo .env con la URL de PostgreSQL de Render.")
+        # Fallback para debug: intentar os.environ directo si dotenv falla
+        url = os.environ.get('DATABASE_URL')
+        if not url:
+            raise Exception("❌ DATABASE_URL no está configurada. Configura tu archivo .env con la URL de PostgreSQL de Render.")
+        DATABASE_URL = url
     
     if not DATABASE_URL.startswith('postgresql'):
         raise Exception(f"❌ DATABASE_URL debe ser PostgreSQL, recibido: {DATABASE_URL[:20]}...")
@@ -123,5 +127,3 @@ def ensure_tables():
         raise
     finally:
         conn.close()
-
-# PostgreSQL only - 2026-02-07

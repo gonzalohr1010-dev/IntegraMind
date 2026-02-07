@@ -535,7 +535,7 @@ def register_lead():
         import sys
         import os
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        from db_config import get_db_connection
+        from database_configuration import get_db_connection
         
         conn, db_type = get_db_connection()
         cursor = conn.cursor()
@@ -726,7 +726,7 @@ def generate_executive_report():
                 import sys
                 import os
                 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-                from db_config import get_db_connection
+                from database_configuration import get_db_connection
                 
                 conn, db_type = get_db_connection()
                 cursor = conn.cursor()
