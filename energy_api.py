@@ -30,6 +30,10 @@ except Exception as e:
     # plc_bridge puede ser None
     plc_bridge = None
 
+# Transformar en Blueprint para integración con server.py
+energy_bp = Blueprint('energy_api', __name__)
+app = energy_bp  # Alias para mantener compatibilidad con decoradores @app.route
+
 # --- GOD MODE SIMULATION STATE ---
 # Estado global para coordinar simulaciones
 SIMULATION_STATE = {

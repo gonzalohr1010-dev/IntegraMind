@@ -17,18 +17,20 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 
 def get_db_connection():
     """Get PostgreSQL database connection"""
-    if not DATABASE_URL:
-        # Fallback para debug: intentar os.environ directo si dotenv falla
-        url = os.environ.get('DATABASE_URL')
-        if not url:
-            raise Exception("❌ DATABASE_URL no está configurada. Configura tu archivo .env con la URL de PostgreSQL de Render.")
-        DATABASE_URL = url
+    # Usar variable global
+    db_url = DATABASE_URL
     
-    if not DATABASE_URL.startswith('postgresql'):
-        raise Exception(f"❌ DATABASE_URL debe ser PostgreSQL, recibido: {DATABASE_URL[:20]}...")
+    if not db_url:
+        # Fallback para debug: intentar os.environ directo si dotenv falla
+        db_url = os.environ.get('DATABASE_URL')
+        if not db_url:
+            raise Exception("❌ DATABASE_URL no está configurada. Configura tu archivo .env con la URL de PostgreSQL de Render.")
+    
+    if not db_url.startswith('postgresql'):
+        raise Exception(f"❌ DATABASE_URL debe ser PostgreSQL, recibido: {db_url[:20]}...")
     
     try:
-        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+        conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
         logger.info("✅ Connected to PostgreSQL")
         return conn, 'postgresql'
     except Exception as e:
