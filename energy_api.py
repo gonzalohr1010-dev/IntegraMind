@@ -731,17 +731,22 @@ def generate_executive_report():
                 conn, db_type = get_db_connection()
                 cursor = conn.cursor()
                 
+                try:
+                    lead_id = int(lead_id) # Forzar conversión a int
+                except:
+                    print(f"⚠️ Error convirtiendo lead_id '{lead_id}' a int")
+
                 print(f"🔍 Buscando email para Lead ID: {lead_id} (Tipo: {type(lead_id)}) en DB: {db_type}")
                 
-                # Debug: Listar IDs existentes
-                cursor.execute("SELECT id, email FROM leads LIMIT 5")
-                existing = cursor.fetchall()
-                print(f"📊 Primeros 5 leads en DB: {existing}")
+                # Debug: Listar TODOS los IDs y emails para ver si el 9 existe
+                cursor.execute("SELECT id, email FROM leads")
+                all_leads = cursor.fetchall()
+                print(f"📊 Leads disponibles en DB ({len(all_leads)}): {all_leads}")
 
                 cursor.execute("SELECT email FROM leads WHERE id = %s", (lead_id,))
                 row = cursor.fetchone()
                 
-                print(f"📝 Resultado consulta: {row}")
+                print(f"📝 Resultado consulta específica para ID {lead_id}: {row}")
                 
                 client_email = row['email'] if row else None
                 
