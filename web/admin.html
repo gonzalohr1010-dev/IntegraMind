@@ -901,21 +901,33 @@
                     })
                 });
 
-                const result = await response.json();
+                const contentType = response.headers.get("content-type");
 
-                if (response.ok) {
-                    let msg = `✅ Reporte generado correctamente.\n\n📄 PDF: ${result.file_path}`;
-                    if (result.email_status) {
-                        msg += `\n📧 Estado Email: ${result.email_status}`;
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        let msg = `✅ Reporte generado correctamente.\n\n📄 PDF: ${result.file_path}`;
+                        if (result.email_status) {
+                            msg += `\n📧 Estado Email: ${result.email_status}`;
+                        }
+                        alert(msg);
+                        loadLeads();
+                    } else {
+                        alert('❌ Error Servidor: ' + (result.error || 'Desconocido'));
                     }
-                    alert(msg);
-                    loadLeads(); // Recargar para ver estado actualizado
                 } else {
-                    alert('❌ Error: ' + (result.error || 'Desconocido'));
+                    const text = await response.text();
+                    console.error("Server HTML Error:", text);
+                    let title = "Error Desconocido (HTML)";
+                    try { title = text.match(/<title>(.*?)<\/title>/)[1]; } catch (e) { }
+
+                    alert(`❌ Error Crítico del Servidor (${response.status} ${title}):\n\nEl servidor devolvió HTML en lugar de JSON.\nProbablemente falta subir el archivo 'pdf_report_generator.py' al backend.`);
                 }
+
             } catch (error) {
                 console.error(error);
-                alert('❌ Error de conexión con el servidor');
+                alert('❌ Error de conexión:\n' + error.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;

@@ -8,25 +8,27 @@ from flask_cors import CORS
 import sqlite3
 from datetime import datetime, timedelta
 import json
-from integra_mind_ai_ollama import IntegraMindOllama
-from reality_weaver import RealityWeaver
-from pdf_report_generator import generate_client_report
-from plc_bridge import plc_bridge  # Nuevo: Bridge para leer PLC real
-from predictive_engine import engine as predictive_engine  # Motor predictivo ML
-
-# Transformar en Blueprint para integração con server.py
-energy_bp = Blueprint('energy_api', __name__)
-app = energy_bp  # Alias para mantener compatibilidad con decoradores @app.route
-
-# @app.route('/')
-# def serve_index():
-#     return app.send_static_file('index.html')
-
+# Inicialización Robusta de Módulos (Evita crash si faltan dep or memoria)
 DB_PATH = 'energy_demo.db'
-# Inicializar el cerebro LLM
-ai_brain = IntegraMindOllama(DB_PATH)
-# Inicializar el tejedor de realidad
-weaver = RealityWeaver()
+ai_brain = None
+weaver = None
+predictive_engine = None
+
+try:
+    from integra_mind_ai_ollama import IntegraMindOllama
+    from reality_weaver import RealityWeaver
+    # pdf_report_generator se importa localmente
+    from plc_bridge import plc_bridge 
+    from predictive_engine import engine as predictive_engine_mod
+    
+    predictive_engine = predictive_engine_mod
+    ai_brain = IntegraMindOllama(DB_PATH)
+    weaver = RealityWeaver()
+    print("✅ Modulos AI cargados correctamente")
+except Exception as e:
+    print(f"⚠️ Alerta: Ejecutando en modo limitado (AI no disponible): {e}")
+    # plc_bridge puede ser None
+    plc_bridge = None
 
 # --- GOD MODE SIMULATION STATE ---
 # Estado global para coordinar simulaciones
