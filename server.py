@@ -23,78 +23,11 @@ DB_PATH = os.path.join(BASE_DIR, 'users.sqlite')
 INDEX_DIR = os.path.join(BASE_DIR, 'index_store')
 
 
+
 def ensure_db():
-    conn = sqlite3.connect(DB_PATH)
-    try:
-        cur = conn.cursor()
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS profiles (user_id TEXT PRIMARY KEY, profile_json TEXT)"
-        )
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS feedback (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT,
-                doc_id TEXT,
-                helpful INTEGER,
-                ts DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS qa_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT,
-                question TEXT,
-                answer TEXT,
-                source TEXT,
-                url TEXT,
-                learned INTEGER DEFAULT 0,
-                ts DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        # New tables for conversations and favorites
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS conversations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT,
-                title TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                conversation_id INTEGER,
-                role TEXT,
-                content TEXT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (conversation_id) REFERENCES conversations(id)
-            )
-            """
-        )
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS favorites (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT,
-                message_id INTEGER,
-                category TEXT,
-                notes TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (message_id) REFERENCES messages(id)
-            )
-            """
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    from db_config import ensure_tables
+    ensure_tables()
+
 
 
 app = Flask(__name__, static_folder=None)
@@ -205,49 +138,36 @@ def get_leads_legacy():
     
     # Get real leads from database
     try:
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
+        from db_config import get_db_connection
+        conn, db_type = get_db_connection()
         cur = conn.cursor()
         
-        # Try with all columns first
-        try:
-            cur.execute("""
-                SELECT id, name, email, company, role, interest, created_at,
-                       report_generated, report_sent_at, report_file_path
-                FROM leads
-                ORDER BY created_at DESC
-            """)
-        except sqlite3.OperationalError as e:
-            logger.warning(f"Column error, trying without report columns: {e}")
-            # Fallback: query without new columns
-            cur.execute("""
-                SELECT id, name, email, company, role, interest, created_at
-                FROM leads
-                ORDER BY created_at DESC
-            """)
+        cur.execute("""
+            SELECT id, name, email, company, role, interest, created_at,
+                   report_generated, report_sent_at, report_file_path
+            FROM leads
+            ORDER BY created_at DESC
+        """)
         
         leads = []
         for row in cur.fetchall():
-            lead_dict = {
-                'id': row['id'],
-                'name': row['name'],
-                'email': row['email'],
-                'company': row['company'],
-                'role': row['role'],
-                'interest': row['interest'],
-                'created_at': row['created_at']
-            }
-            
-            # Try to add report columns if they exist
-            try:
-                lead_dict['report_generated'] = row['report_generated'] or 0
-                lead_dict['report_sent_at'] = row['report_sent_at']
-                lead_dict['report_file_path'] = row['report_file_path']
-            except (KeyError, IndexError):
-                # Columns don't exist, use defaults
-                lead_dict['report_generated'] = 0
-                lead_dict['report_sent_at'] = None
-                lead_dict['report_file_path'] = None
+            if db_type == 'postgresql':
+                # PostgreSQL returns dict-like rows
+                lead_dict = dict(row)
+            else:
+                # SQLite Row object
+                lead_dict = {
+                    'id': row['id'],
+                    'name': row['name'],
+                    'email': row['email'],
+                    'company': row['company'],
+                    'role': row['role'],
+                    'interest': row['interest'],
+                    'created_at': row['created_at'],
+                    'report_generated': row['report_generated'] or 0,
+                    'report_sent_at': row['report_sent_at'],
+                    'report_file_path': row['report_file_path']
+                }
             
             leads.append(lead_dict)
         
@@ -478,47 +398,26 @@ def register_lead():
             return jsonify({'error': 'Missing required fields'}), 400
         
         # Store in database
-        conn = sqlite3.connect(DB_PATH)
+        from db_config import get_db_connection
+        conn, db_type = get_db_connection()
         cur = conn.cursor()
         
-        # Create leads table if it doesn't exist
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS leads (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT NOT NULL,
-                company TEXT,
-                role TEXT,
-                interest TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                report_generated INTEGER DEFAULT 0,
-                report_sent_at DATETIME,
-                report_file_path TEXT
-            )
-        """)
-        
-        # Add new columns if they don't exist (for existing databases)
-        try:
-            cur.execute("ALTER TABLE leads ADD COLUMN report_generated INTEGER DEFAULT 0")
-        except:
-            pass
-        try:
-            cur.execute("ALTER TABLE leads ADD COLUMN report_sent_at DATETIME")
-        except:
-            pass
-        try:
-            cur.execute("ALTER TABLE leads ADD COLUMN report_file_path TEXT")
-        except:
-            pass
-        
-        # Insert lead
-        cur.execute("""
-            INSERT INTO leads (name, email, company, role, interest)
-            VALUES (?, ?, ?, ?, ?)
-        """, (data['name'], data['email'], data['company'], data['role'], data['interest']))
+        # Insert lead (PostgreSQL and SQLite compatible)
+        if db_type == 'postgresql':
+            cur.execute("""
+                INSERT INTO leads (name, email, company, role, interest)
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id
+            """, (data['name'], data['email'], data['company'], data['role'], data['interest']))
+            lead_id = cur.fetchone()[0]
+        else:
+            cur.execute("""
+                INSERT INTO leads (name, email, company, role, interest)
+                VALUES (?, ?, ?, ?, ?)
+            """, (data['name'], data['email'], data['company'], data['role'], data['interest']))
+            lead_id = cur.lastrowid
         
         conn.commit()
-        lead_id = cur.lastrowid
         conn.close()
         
         logger.info(f"New lead registered: {data['name']} ({data['email']})")
