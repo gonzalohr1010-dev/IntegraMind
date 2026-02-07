@@ -158,25 +158,8 @@ def get_leads_legacy():
         
         leads = []
         for row in cur.fetchall():
-            if db_type == 'postgresql':
-                # PostgreSQL returns dict-like rows
-                lead_dict = dict(row)
-            else:
-                # SQLite Row object
-                lead_dict = {
-                    'id': row['id'],
-                    'name': row['name'],
-                    'email': row['email'],
-                    'company': row['company'],
-                    'role': row['role'],
-                    'interest': row['interest'],
-                    'created_at': row['created_at'],
-                    'report_generated': row['report_generated'] or 0,
-                    'report_sent_at': row['report_sent_at'],
-                    'report_file_path': row['report_file_path']
-                }
-            
-            leads.append(lead_dict)
+            # PostgreSQL returns dict-like rows with RealDictCursor
+            leads.append(dict(row))
         
         conn.close()
         return jsonify(leads)
