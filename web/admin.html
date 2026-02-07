@@ -839,6 +839,8 @@
 
             leads.forEach(lead => {
                 const date = new Date(lead.created_at).toLocaleString();
+                const dbSource = lead._debug_db ? `<span style="font-size:0.7rem; color: #aaa;">(${lead._debug_db})</span>` : '';
+
                 let statusBadge = '';
                 let actionBtn = '';
 
@@ -861,7 +863,9 @@
 
                 const row = `
                     <tr>
-                        <td style="font-size: 0.9rem; color: var(--admin-text-muted);">${date}</td>
+                        <td style="font-size: 0.9rem; color: var(--admin-text-muted);">
+                            ${date}<br/>ID: ${lead.id} ${dbSource}
+                        </td>
                         <td style="font-weight: bold; color: var(--admin-text);">${lead.name}</td>
                         <td style="font-size: 0.9rem;">${lead.company || '-'}</td>
                         <td style="font-size: 0.9rem;">${lead.email}</td>
