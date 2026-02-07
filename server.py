@@ -149,6 +149,8 @@ def get_leads_legacy():
         conn, db_type = get_db_connection()
         cur = conn.cursor()
         
+        print(f"📋 Listando leads desde DB: {db_type}")
+        
         cur.execute("""
             SELECT id, name, email, company, role, interest, created_at,
                    report_generated, report_sent_at, report_file_path
@@ -158,8 +160,9 @@ def get_leads_legacy():
         
         leads = []
         for row in cur.fetchall():
-            # PostgreSQL returns dict-like rows with RealDictCursor
-            leads.append(dict(row))
+            item = dict(row)
+            item['_debug_db'] = db_type  # Marca de agua para saber el origen
+            leads.append(item)
         
         conn.close()
         return jsonify(leads)
