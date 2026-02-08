@@ -71,28 +71,44 @@ class EmailSender:
             
             # Enviar email
             try:
-                # MODO SIMULACIÓN AUTOMÁTICO
-                # Si las credenciales son las por defecto, simulamos el envío para la demo
-                if "tu_email" in self.sender_email or "tu_app_password" in self.sender_password:
-                    self._log_simulation(recipient_email, msg)
-                    print(f"✅ [SIMULACIÓN] Email registrado exitosamente para {recipient_email}")
-                    return True
-
-                with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                    server.starttls()
-                    server.login(self.sender_email, self.sender_password)
-                    server.send_message(msg)
+                print(f"📧 Intentando enviar email...")
+                print(f"   De: {self.sender_email}")
+                print(f"   Para: {recipient_email}")
+                print(f"   Servidor SMTP: {self.smtp_server}:{self.smtp_port}")
                 
-                print(f"✅ Email enviado exitosamente a {recipient_email}")
-                return True
-            except Exception as smtp_error:
-                print(f"⚠️ Error SMTP real: {smtp_error}")
-                print("🔄 Cambiando a MODO SIMULACIÓN por fallo de credenciales...")
-                self._log_simulation(recipient_email, msg)
-                return True
+                with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=15) as server:
+                    print(f"   ✅ Conexión SMTP establecida")
+                    server.set_debuglevel(0)  # 0 = sin debug, 1 = con debug
+                    server.starttls()
+                    print(f"   ✅ TLS iniciado")
+                    server.login(self.sender_email, self.sender_password)
+                    print(f"   ✅ Login exitoso")
+                    
+                    # send_message devuelve un dict con rechazos (vacío si todo OK)
+                    result = server.send_message(msg)
+                    
+                    if result:
+                        print(f"   ⚠️ Algunos destinatarios rechazados: {result}")
+                        return False
+                    else:
+                        print(f"   ✅ Email enviado y aceptado por el servidor SMTP")
+                        return True
+                
+            except smtplib.SMTPAuthenticationError as auth_err:
+                print(f"❌ Error de autenticación SMTP: {auth_err}")
+                print(f"   Verifica SMTP_USER y SMTP_PASSWORD en las variables de entorno")
+                return False
+            except smtplib.SMTPException as smtp_err:
+                print(f"❌ Error SMTP: {smtp_err}")
+                return False
+            except Exception as e:
+                print(f"❌ Error inesperado enviando email: {e}")
+                import traceback
+                traceback.print_exc()
+                return False
             
         except Exception as e:
-            print(f"❌ Error general enviando email: {e}")
+            print(f"❌ Error general preparando email: {e}")
             return False
 
     def _log_simulation(self, recipient, msg):
