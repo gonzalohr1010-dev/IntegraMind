@@ -76,23 +76,41 @@ class EmailSender:
                 print(f"   Para: {recipient_email}")
                 print(f"   Servidor SMTP: {self.smtp_server}:{self.smtp_port}")
                 
-                with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=15) as server:
-                    print(f"   ✅ Conexión SMTP establecida")
-                    server.set_debuglevel(0)  # 0 = sin debug, 1 = con debug
-                    server.starttls()
-                    print(f"   ✅ TLS iniciado")
-                    server.login(self.sender_email, self.sender_password)
-                    print(f"   ✅ Login exitoso")
-                    
-                    # send_message devuelve un dict con rechazos (vacío si todo OK)
-                    result = server.send_message(msg)
-                    
-                    if result:
-                        print(f"   ⚠️ Algunos destinatarios rechazados: {result}")
-                        return False
-                    else:
-                        print(f"   ✅ Email enviado y aceptado por el servidor SMTP")
-                        return True
+                # Puerto 465 usa SSL, puerto 587 usa STARTTLS
+                if self.smtp_port == 465:
+                    print(f"   🔒 Usando SMTP_SSL (puerto 465)")
+                    with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port, timeout=15) as server:
+                        print(f"   ✅ Conexión SSL establecida")
+                        server.set_debuglevel(0)
+                        server.login(self.sender_email, self.sender_password)
+                        print(f"   ✅ Login exitoso")
+                        
+                        result = server.send_message(msg)
+                        
+                        if result:
+                            print(f"   ⚠️ Algunos destinatarios rechazados: {result}")
+                            return False
+                        else:
+                            print(f"   ✅ Email enviado y aceptado por el servidor SMTP")
+                            return True
+                else:
+                    print(f"   🔒 Usando SMTP con STARTTLS (puerto {self.smtp_port})")
+                    with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=15) as server:
+                        print(f"   ✅ Conexión SMTP establecida")
+                        server.set_debuglevel(0)
+                        server.starttls()
+                        print(f"   ✅ TLS iniciado")
+                        server.login(self.sender_email, self.sender_password)
+                        print(f"   ✅ Login exitoso")
+                        
+                        result = server.send_message(msg)
+                        
+                        if result:
+                            print(f"   ⚠️ Algunos destinatarios rechazados: {result}")
+                            return False
+                        else:
+                            print(f"   ✅ Email enviado y aceptado por el servidor SMTP")
+                            return True
                 
             except smtplib.SMTPAuthenticationError as auth_err:
                 print(f"❌ Error de autenticación SMTP: {auth_err}")
