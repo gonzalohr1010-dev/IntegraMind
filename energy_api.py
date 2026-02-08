@@ -581,6 +581,20 @@ def admin_ping():
     return jsonify({'status': 'OK', 'message': 'energy_api.py is alive!'})
 
 
+@app.route('/api/admin/debug-email-config', methods=['GET'])
+def debug_email_config():
+    """Endpoint de debug para verificar configuración de email"""
+    import os
+    return jsonify({
+        'resend_api_key_configured': bool(os.getenv('RESEND_API_KEY')),
+        'resend_api_key_prefix': os.getenv('RESEND_API_KEY', '')[:5] + '...' if os.getenv('RESEND_API_KEY') else 'NOT SET',
+        'sender_email': os.getenv('SENDER_EMAIL') or os.getenv('SMTP_USER'),
+        'sender_name': os.getenv('SENDER_NAME', 'NOT SET'),
+        'smtp_server': os.getenv('SMTP_SERVER', 'NOT SET'),
+        'smtp_port': os.getenv('SMTP_PORT', 'NOT SET')
+    })
+
+
 @app.route('/api/admin/debug-leads', methods=['GET'])
 def debug_leads():
     try:
