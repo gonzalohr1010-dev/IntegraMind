@@ -9,28 +9,31 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from datetime import datetime
 import os
+import base64
 
 class EmailSender:
     def __init__(self, smtp_server=None, smtp_port=None):
         """
         Inicializar el sistema de email
         
-        Para usar Gmail:
-        1. Crear una "App Password" en tu cuenta de Google
-        2. Ir a: https://myaccount.google.com/apppasswords
-        3. Generar contraseña para "Mail"
-        4. Configurar variables de entorno en Render
+        Prioridad:
+        1. Resend API (recomendado para Render - 100 emails/día gratis)
+        2. SMTP (Gmail, etc.) - puede estar bloqueado en Render Free Tier
         """
+        # Resend API Key (prioritario)
+        self.resend_api_key = os.getenv('RESEND_API_KEY')
+        
+        # SMTP como fallback
         self.smtp_server = smtp_server or os.getenv('SMTP_SERVER', 'smtp.gmail.com')
         self.smtp_port = smtp_port or int(os.getenv('SMTP_PORT', '587'))
         
-        # Leer credenciales de variables de entorno
+        # Credenciales
         self.sender_email = os.getenv('SMTP_USER') or os.getenv('SENDER_EMAIL')
         self.sender_password = os.getenv('SMTP_PASSWORD')
         self.sender_name = os.getenv('SENDER_NAME', 'Integra Mind Energy')
         
-        if not self.sender_email or not self.sender_password:
-            raise ValueError("❌ SMTP_USER y SMTP_PASSWORD deben estar configurados en las variables de entorno")
+        if not self.resend_api_key and (not self.sender_email or not self.sender_password):
+            print("⚠️ Advertencia: No se configuró RESEND_API_KEY ni SMTP. El envío de emails puede fallar.")
     
     def send_report_email(self, recipient_email, recipient_name, company_name, pdf_path):
         """
@@ -70,60 +73,132 @@ class EmailSender:
                 print(f"⚠️ Advertencia: PDF no encontrado en {pdf_path}")
             
             # Enviar email
-            try:
-                print(f"📧 Intentando enviar email...")
-                print(f"   De: {self.sender_email}")
-                print(f"   Para: {recipient_email}")
-                print(f"   Servidor SMTP: {self.smtp_server}:{self.smtp_port}")
+            # Prioridad 1: Resend API (funciona en Render Free Tier)
+            if self.resend_api_key:
+                return self._send_via_resend(recipient_email, recipient_name, company_name, msg, pdf_path)
+            else:
+                # Prioridad 2: SMTP (puede estar bloqueado en Render)
+                return self._send_via_smtp(recipient_email, msg)
                 
-                # Puerto 465 usa SSL, puerto 587 usa STARTTLS
-                if self.smtp_port == 465:
-                    print(f"   🔒 Usando SMTP_SSL (puerto 465)")
-                    with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port, timeout=15) as server:
-                        print(f"   ✅ Conexión SSL establecida")
-                        server.set_debuglevel(0)
-                        server.login(self.sender_email, self.sender_password)
-                        print(f"   ✅ Login exitoso")
-                        
-                        result = server.send_message(msg)
-                        
-                        if result:
-                            print(f"   ⚠️ Algunos destinatarios rechazados: {result}")
-                            return False
-                        else:
-                            print(f"   ✅ Email enviado y aceptado por el servidor SMTP")
-                            return True
-                else:
-                    print(f"   🔒 Usando SMTP con STARTTLS (puerto {self.smtp_port})")
-                    with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=15) as server:
-                        print(f"   ✅ Conexión SMTP establecida")
-                        server.set_debuglevel(0)
-                        server.starttls()
-                        print(f"   ✅ TLS iniciado")
-                        server.login(self.sender_email, self.sender_password)
-                        print(f"   ✅ Login exitoso")
-                        
-                        result = server.send_message(msg)
-                        
-                        if result:
-                            print(f"   ⚠️ Algunos destinatarios rechazados: {result}")
-                            return False
-                        else:
-                            print(f"   ✅ Email enviado y aceptado por el servidor SMTP")
-                            return True
+        except Exception as e:
+            print(f"❌ Error general preparando email: {e}")
+            return False
+    
+    def _send_via_resend(self, recipient_email, recipient_name, company_name, msg, pdf_path):
+        """Enviar email usando Resend API"""
+        try:
+            import requests
+            
+            print(f"📧 Enviando vía Resend API...")
+            print(f"   De: {self.sender_email}")
+            print(f"   Para: {recipient_email}")
+            
+            # Leer PDF y convertir a base64
+            pdf_content = None
+            pdf_filename = "Informe_Ejecutivo.pdf"
+            if os.path.exists(pdf_path):
+                with open(pdf_path, 'rb') as f:
+                    pdf_content = base64.b64encode(f.read()).decode()
+                pdf_filename = os.path.basename(pdf_path)
+            
+            # Crear payload para Resend (más simple que SendGrid)
+            payload = {
+                "from": f"{self.sender_name} <{self.sender_email}>",
+                "to": [recipient_email],
+                "subject": f"📊 Análisis Ejecutivo para {company_name} - Integra Mind Energy",
+                "html": self._create_email_body(recipient_name, company_name)
+            }
+            
+            # Agregar adjunto si existe
+            if pdf_content:
+                payload["attachments"] = [{
+                    "content": pdf_content,
+                    "filename": pdf_filename
+                }]
+            
+            # Enviar request a Resend
+            headers = {
+                "Authorization": f"Bearer {self.resend_api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            response = requests.post(
+                "https://api.resend.com/emails",
+                json=payload,
+                headers=headers,
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                print(f"   ✅ Email enviado exitosamente vía Resend")
+                print(f"   📬 Email ID: {response.json().get('id', 'N/A')}")
+                return True
+            else:
+                print(f"   ❌ Resend error {response.status_code}: {response.text}")
+                return False
                 
-            except smtplib.SMTPAuthenticationError as auth_err:
-                print(f"❌ Error de autenticación SMTP: {auth_err}")
-                print(f"   Verifica SMTP_USER y SMTP_PASSWORD en las variables de entorno")
-                return False
-            except smtplib.SMTPException as smtp_err:
-                print(f"❌ Error SMTP: {smtp_err}")
-                return False
-            except Exception as e:
-                print(f"❌ Error inesperado enviando email: {e}")
-                import traceback
-                traceback.print_exc()
-                return False
+        except Exception as e:
+            print(f"❌ Error enviando vía Resend: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+    
+    def _send_via_smtp(self, recipient_email, msg):
+        """Enviar email usando SMTP (fallback)"""
+        try:
+            print(f"📧 Intentando enviar vía SMTP...")
+            print(f"   De: {self.sender_email}")
+            print(f"   Para: {recipient_email}")
+            print(f"   Servidor SMTP: {self.smtp_server}:{self.smtp_port}")
+            
+            # Puerto 465 usa SSL, puerto 587 usa STARTTLS
+            if self.smtp_port == 465:
+                print(f"   🔒 Usando SMTP_SSL (puerto 465)")
+                with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port, timeout=15) as server:
+                    print(f"   ✅ Conexión SSL establecida")
+                    server.set_debuglevel(0)
+                    server.login(self.sender_email, self.sender_password)
+                    print(f"   ✅ Login exitoso")
+                    
+                    result = server.send_message(msg)
+                    
+                    if result:
+                        print(f"   ⚠️ Algunos destinatarios rechazados: {result}")
+                        return False
+                    else:
+                        print(f"   ✅ Email enviado y aceptado por el servidor SMTP")
+                        return True
+            else:
+                print(f"   🔒 Usando SMTP con STARTTLS (puerto {self.smtp_port})")
+                with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=15) as server:
+                    print(f"   ✅ Conexión SMTP establecida")
+                    server.set_debuglevel(0)
+                    server.starttls()
+                    print(f"   ✅ TLS iniciado")
+                    server.login(self.sender_email, self.sender_password)
+                    print(f"   ✅ Login exitoso")
+                    
+                    result = server.send_message(msg)
+                    
+                    if result:
+                        print(f"   ⚠️ Algunos destinatarios rechazados: {result}")
+                        return False
+                    else:
+                        print(f"   ✅ Email enviado y aceptado por el servidor SMTP")
+                        return True
+            
+        except smtplib.SMTPAuthenticationError as auth_err:
+            print(f"❌ Error de autenticación SMTP: {auth_err}")
+            print(f"   Verifica SMTP_USER y SMTP_PASSWORD en las variables de entorno")
+            return False
+        except smtplib.SMTPException as smtp_err:
+            print(f"❌ Error SMTP: {smtp_err}")
+            return False
+        except Exception as e:
+            print(f"❌ Error inesperado enviando email: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
             
         except Exception as e:
             print(f"❌ Error general preparando email: {e}")
